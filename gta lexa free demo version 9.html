@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA ЛЁХА (V12.6 - ЛЁХА НЕ ПОТЕРЯЕТСЯ)</title>
+    <title>GTA ЛЁХА (V12.8 - ФИНАЛЬНЫЙ FIX)</title>
     <style>
-        /* --- СТИЛИ (Обновлен маркер игрока) --- */
+        /* --- СТИЛИ --- */
         body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; user-select: none; background: #000; }
         canvas { display: block; width: 100vw; height: 100vh; }
 
@@ -66,16 +66,16 @@
             border-radius: 50%;
             transform: translate(-50%, -50%);
         }
-        /* --- ИЗМЕНЕНИЕ: Увеличение размера маркера игрока --- */
+        /* --- Маркер игрока (увеличенный) --- */
         #playerMarker { 
             background-color: lime; 
-            border: 2px solid white; /* Добавляем белый ободок для контраста */
+            border: 2px solid white; 
             z-index: 5; 
-            width: 12px; /* Увеличиваем размер */
+            width: 12px; 
             height: 12px;
-            box-shadow: 0 0 5px rgba(0, 255, 0, 0.8); /* Свечение */
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.8); 
         }
-        /* --------------------------------------------------- */
+        /* ----------------------------------- */
         .policeMarker { background-color: red; border: 1px solid black; z-index: 4; }
         .mapBuilding {
             position: absolute;
@@ -201,7 +201,7 @@
         <div id="hpDisplay" style="color: red; margin-top: 5px;">❤️ ЗДОРОВЬЕ: 100</div>
         <div id="weaponDisplay" style="color: orange; margin-top: 5px;">👊 КУЛАКИ</div>
         <div id="wantedLevel" style="color: white; margin-top: 5px;">★ РОЗЫСК: 0</div>
-        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.6 (ЛЁХА НЕ ПОТЕРЯЕТСЯ)</div>
+        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.8 (ФИНАЛЬНЫЙ FIX)</div>
     </div>
     
     <div id="miniMap">
@@ -256,7 +256,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.6) ===
+        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.8) ===
         const CAMERA_HEIGHT = 1.5;
         const NPC_COUNT = 200;       
         const POLICE_COUNT = 20;     
@@ -340,7 +340,15 @@
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
-            document.body.appendChild(renderer.renderer.domElement);
+            
+            // --- ГАРАНТИЯ ДОБАВЛЕНИЯ CANVAS В DOM (ИСПРАВЛЕНИЕ ЧЕРНОГО ЭКРАНА) ---
+            const canvasElement = renderer.domElement;
+            // Убеждаемся, что канвас находится в теле документа и он единственный
+            if (document.body.contains(canvasElement)) {
+                 document.body.removeChild(canvasElement);
+            }
+            document.body.appendChild(canvasElement);
+            // ---------------------------------------------------------------------
 
             raycaster = new THREE.Raycaster();
             
@@ -523,7 +531,7 @@
             if (moveFwd||moveBwd||moveLft||moveRgt) weaponGroup.position.y = -0.4 + Math.sin(performance.now()*0.015)*0.02;
         }
 
-        // === ГЛОБАЛЬНАЯ ФУНКЦИЯ ВЫСТРЕЛА NPC (Урон увеличен и проверен) ===
+        // === ГЛОБАЛЬНАЯ ФУНКЦИЯ ВЫСТРЕЛА NPC (Урон увеличен и проверен) ---
         function npcShoot(npc) {
             if (npc.userData.lastShot && performance.now() - npc.userData.lastShot < 1000) return; 
             if (currentCar) return; 
