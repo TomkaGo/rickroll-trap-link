@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA ЛЁХА (V12.0 - ФИНАЛЬНЫЙ РЕЛИЗ С МЕМАМИ)</title>
+    <title>GTA ЛЁХА (V12.1 - РЕЖИМ ХАОС)</title>
     <style>
         body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; user-select: none; background: #000; }
         canvas { display: block; width: 100vw; height: 100vh; }
@@ -27,6 +27,17 @@
             animation: bounce 1s infinite;
         }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+        /* BOUNDARY WARNING (НОВЫЙ СТИЛЬ) */
+        #boundaryWarning {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; justify-content: center; align-items: center;
+            background: rgba(255, 0, 0, 0.2); 
+            color: white; font-size: 4em; font-weight: bold;
+            text-shadow: 0 0 10px black;
+            z-index: 50; 
+            pointer-events: none;
+        }
 
         /* --- МИНИ-КАРТА --- */
         #miniMap {
@@ -144,13 +155,14 @@
 
     <div id="crosshair"></div>
     <div id="carHint">НАЖМИТЕ [F], ЧТОБЫ СЕСТЬ В МАШИНУ</div>
+    <div id="boundaryWarning"></div>
     
     <div id="hud">
         <div id="timeDisplay">12:00</div>
         <div id="hpDisplay" style="color: red; margin-top: 5px;">❤️ ЗДОРОВЬЕ: 100</div>
         <div id="weaponDisplay" style="color: orange; margin-top: 5px;">👊 КУЛАКИ</div>
         <div id="wantedLevel" style="color: white; margin-top: 5px;">★ РОЗЫСК: 0</div>
-        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.0 (ФИНАЛЬНЫЙ РЕЛИЗ С МЕМАМИ)</div>
+        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.1 (РЕЖИМ ХАОС - СНАЙПЕР ЛЁХА)</div>
     </div>
     
     <div id="miniMap">
@@ -192,7 +204,7 @@
         </ul>
 
         <h4>🚨 Розыск и Полиция</h4>
-        <p>Каждое убийство (пешехода или полицейского) повышает уровень розыска (★). Полиция будет тебя преследовать, а если догонит, увидишь надпись: **ШО ТУТ ДУМАЛ В СКАЗКУ ПОПАЛ!**</p>
+        <p>Каждое убийство (пешехода или полицейского) повышает уровень розыска (★). Полиция теперь стреляет издалека, а если догонит, увидишь надпись: **ШО ТУТ ДУМАЛ В СКАЗКУ ПОПАЛ!**</p>
 
         <button onclick="document.getElementById('infoBox').style.display='none'">ЗАКРЫТЬ</button>
     </div>
@@ -206,14 +218,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.0) ===
+        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.1) ===
+        // 1. РЕЖИМ ХАОС: МАЛО НАРОДУ
         const CAMERA_HEIGHT = 1.5;
-        const NPC_COUNT = 500; // УВЕЛИЧЕНО ПО ЗАПРОСУ
-        const TRAFFIC_CAR_COUNT = 50; 
+        const NPC_COUNT = 150; // ИЗМЕНЕНО: Снижено с 500 до 150
+        const TRAFFIC_CAR_COUNT = 15; // ИЗМЕНЕНО: Снижено с 50 до 15
         const RESPAWN_INTERVAL = 90 * 1000; 
         const MAP_SIZE = 400; 
         const BORDER_COLLISION_SIZE = 5; 
-        const VISIBLE_WALL_HEIGHT = 100; 
+        // 3. НЕВИДИМАЯ ГРАНИЦА
+        const VISIBLE_WALL_HEIGHT = 1; // ИЗМЕНЕНО: Снижено со 100 до 1 (для невидимости)
         const PLAYER_COLLISION_RADIUS = 1.5; 
         const MINIMAP_SIZE_PX = 200; 
         const MINIMAP_SCALE = 0.8; 
@@ -249,7 +263,7 @@
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87ceeb);
-            scene.fog = new THREE.Fog(0x87ceeb, 10, 300); 
+            scene.fog = new THREE.Fog(0x87ceeb, 10, 300); // ТУМАН - уже был, отлично для режима ХАОС
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
             
@@ -272,12 +286,11 @@
             
             createMapBounds(); 
             
-            // --- ПАСХАЛКИ ЛЁХИ НА ГРАНИЦЕ ---
-            const boundsCenter = MAP_SIZE + BORDER_COLLISION_SIZE / 2;
-            // Лёха (Красный) - На Северной стене, лицом к карте
-            createEasterEggPullUp(0, -boundsCenter, 0);
-            // Второй NPC (Синий) - На Восточной стене, лицом к карте
-            createEasterEggPullUp(boundsCenter, 0, -Math.PI / 2);
+            // 3. ПЕРЕНОС ПАСХАЛОК В ГОРОД (вместо границы)
+            // Лёха (Красный)
+            createEasterEggPullUp(150, 150, Math.PI); 
+            // Второй NPC (Синий) 
+            createEasterEggPullUp(-150, -150, 0); 
             
             spawnMyCar();
             spawnTraffic();
@@ -305,30 +318,27 @@
             animate();
         }
 
-        // === ФУНКЦИЯ ДЛЯ СОЗДАНИЯ ПАСХАЛКИ "ПОДТЯГИВАЮЩИЙСЯ ЛЁХА" ===
+        // === ФУНКЦИЯ ДЛЯ СОЗДАНИЯ ПАСХАЛКИ (АДАПТИРОВАНА ДЛЯ СТАНДАРТНОГО NPC) ===
         function createEasterEggPullUp(x, z, rotY) {
             const group = new THREE.Group();
             // Красный цвет для Лёхи, Синий для второго
-            const bodyColor = (x === 0 && z < 0) ? 0xcc0000 : 0x0000cc; 
+            const bodyColor = (x > 0) ? 0xcc0000 : 0x0000cc; 
             const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.5, 0.3), new THREE.MeshStandardMaterial({color: bodyColor})); 
             body.position.y = 0.75;
             const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), new THREE.MeshStandardMaterial({color: 0xffe0bd})); 
             head.position.y = 1.6;
             
-            // Руки (горизонтально, чтобы имитировать хватку за край)
+            // Руки
             const armGeo = new THREE.BoxGeometry(0.8, 0.15, 0.15); // Широкие и плоские
             const armMat = new THREE.MeshStandardMaterial({color: 0xffe0bd});
             
             const arms = new THREE.Mesh(armGeo, armMat);
-            arms.position.set(0, 1.85, -0.2); // Располагаем руки над головой, чуть назад
+            arms.position.set(0, 1.85, -0.2); // Руки "висят" над головой, имитируя хватку
             group.add(arms);
 
             group.add(body, head);
-
-            const wallHeight = VISIBLE_WALL_HEIGHT;
-            // Центр группы (y=0) должен быть на 98.15, чтобы руки (y=1.85) были на y=100 (верх стены).
             
-            group.position.set(x, wallHeight - 1.85, z); 
+            group.position.set(x, 0, z); // Установка на землю
             group.rotation.y = rotY; 
             group.castShadow = true;
             group.name = "EasterEggNPC"; 
@@ -336,7 +346,7 @@
             scene.add(group);
         }
 
-        // === СОЗДАНИЕ СКАМЕЙКИ ===
+        // === СОЗДАНИЕ СКАМЕЙКИ (для режима "Мало народу" оставляем меньше скамеек) ===
         function createBench(x, y, z, rotY) {
             const plank = new THREE.Mesh(new THREE.BoxGeometry(3, 0.2, 0.8), new THREE.MeshStandardMaterial({color: 0x8b4513})); 
             plank.position.y = 0.8;
@@ -364,7 +374,7 @@
             collisionObjects.push(l4);
         }
         
-        // --- ДВИЖЕНИЕ ПЕШЕХОДА ---
+        // --- ДВИЖЕНИЕ ПЕШЕХОДА (Добавлена проверка на границу) ---
         function movePlayer(dt) {
             const speed = 8; const dir = new THREE.Vector3();
             if (moveFwd) dir.z -= 1; if (moveBwd) dir.z += 1; if (moveLft) dir.x -= 1; if (moveRgt) dir.x += 1;
@@ -391,6 +401,17 @@
             
             player.translateX(dir.x); player.translateZ(dir.z); 
             player.position.y = CAMERA_HEIGHT;
+
+            // 3. ДОБАВЛЕНО: Предупреждение о невидимой границе
+            const boundaryWarning = document.getElementById('boundaryWarning');
+            const BOUNDARY_RANGE = 50; 
+            
+            if (Math.abs(player.position.x) > MAP_SIZE - BOUNDARY_RANGE || Math.abs(player.position.z) > MAP_SIZE - BOUNDARY_RANGE) {
+                 boundaryWarning.style.display = 'flex';
+                 boundaryWarning.innerText = "🛑 ЛЁХА, НЕ ЛЕЗЬ СЮДА!";
+            } else {
+                 boundaryWarning.style.display = 'none';
+            }
 
             let nearCar = false; cars.forEach(c => { if(player.position.distanceTo(c.position) < 5) nearCar = true; });
             document.getElementById('carHint').style.display = nearCar ? 'block' : 'none';
@@ -423,7 +444,8 @@
                     return false;
                 });
 
-                if (hitPlayer && hitPlayer.distance < 60) {
+                // 2. СНАЙПЕР ЛЁХА: Полицейские теперь стреляют на 150 (как и игрок)
+                if (hitPlayer && hitPlayer.distance < 150) { 
                     const damage = Math.floor(Math.random() * 3) + 3; // 3-5 HP
                     playerHP -= damage;
                     document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${playerHP}`;
@@ -436,6 +458,7 @@
         }
 
         // === МИНИ-КАРТА (ФИНАЛЬНЫЙ ФИКС СЛЕДОВАНИЯ) ===
+        // ... (Без изменений)
         function updateMiniMap() {
             const mapDiv = document.getElementById('mapContent');
             const mapW = MINIMAP_SIZE_PX;
@@ -616,7 +639,8 @@
 
                         if (distance < 2) endGame(); 
 
-                        if (distance < 60 && npc.userData.hasWeapon === 'PISTOL') {
+                        // 2. СНАЙПЕР ЛЁХА: Полицейские стреляют издалека (до 150)
+                        if (distance < 150 && npc.userData.hasWeapon === 'PISTOL') { 
                              npcShoot(npc);
                         }
                     }
@@ -652,7 +676,14 @@
         // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
         function createMapBounds() {
             const bounds = MAP_SIZE + BORDER_COLLISION_SIZE / 2;
-            const material = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.9, metalness: 0.1 }); 
+            // 3. НЕВИДИМАЯ ГРАНИЦА: Устанавливаем почти прозрачный материал
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0x808080, 
+                opacity: 0.1, 
+                transparent: true,
+                roughness: 0.9, 
+                metalness: 0.1 
+            }); 
             const wall1 = new THREE.Mesh(new THREE.BoxGeometry(MAP_SIZE * 2 + BORDER_COLLISION_SIZE * 2, VISIBLE_WALL_HEIGHT, BORDER_COLLISION_SIZE), material); wall1.position.set(0, VISIBLE_WALL_HEIGHT/2, -bounds); collisionObjects.push(wall1); scene.add(wall1);
             const wall2 = new THREE.Mesh(new THREE.BoxGeometry(MAP_SIZE * 2 + BORDER_COLLISION_SIZE * 2, VISIBLE_WALL_HEIGHT, BORDER_COLLISION_SIZE), material); wall2.position.set(0, VISIBLE_WALL_HEIGHT/2, bounds); collisionObjects.push(wall2); scene.add(wall2);
             const wall3 = new THREE.Mesh(new THREE.BoxGeometry(BORDER_COLLISION_SIZE, VISIBLE_WALL_HEIGHT, MAP_SIZE * 2), material); wall3.position.set(-bounds, VISIBLE_WALL_HEIGHT/2, 0); collisionObjects.push(wall3); scene.add(wall3);
@@ -687,19 +718,17 @@
                         
                         mapBuildings.push({x: x, z: z, w: w, d: w});
                     }
+                    // 1. РЕЖИМ ХАОС: Уменьшаем количество деревьев у границ
                     else if (Math.abs(x) > MAP_SIZE - 50 || Math.abs(z) > MAP_SIZE - 50) {
-                            if (Math.random() > 0.8) createTree(x + Math.random()*10, z + Math.random()*10); 
+                            if (Math.random() > 0.95) createTree(x + Math.random()*10, z + Math.random()*10); // Шанс уменьшен с 0.8 до 0.95
                     }
                 }
             }
         }
         function createStreetFurniture() {
+            // 1. РЕЖИМ ХАОС: Убираем лишние скамейки (меньше мусора)
             createBench(-40, 0.01, 5, 0); 
-            createBench(150, 0.01, 150, Math.PI/2); 
-            createBench(-20, 0.01, 20, Math.PI/2); 
-            createBench(35, 0.01, -25, Math.PI/2);
             createBench(-100, 0.01, -5, 0);
-            createBench(0, 0.01, -120, Math.PI);
         }
         function createTree(x, z) {
             const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.6, 3), new THREE.MeshStandardMaterial({color:0x5c4033})); trunk.position.set(x, 1.5, z); trunk.castShadow = true; scene.add(trunk); collisionObjects.push(trunk);
@@ -802,6 +831,15 @@
             if(currentCar) return; 
             if(document.pointerLockElement!==document.body) { document.body.requestPointerLock(); return; } 
             
+            // 2. СНАЙПЕР ЛЁХА: Добавление эффекта отдачи (тряски камеры)
+            if (currentWeapon === 'PISTOL') {
+                camera.rotation.x -= 0.05; // Временный "кивок" вверх
+                setTimeout(() => {
+                    // Плавное возвращение
+                    camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x + 0.05));
+                }, 100);
+            }
+            
             playSound(currentWeapon==='FIST'?'punch':'shoot'); 
             weaponGroup.position.z = -0.2; setTimeout(()=>weaponGroup.position.z=-0.5, 100); 
             raycaster.setFromCamera(new THREE.Vector2(0,0), camera); 
@@ -809,7 +847,8 @@
             
             if(hits.length > 0) { 
                 const d = hits[0].distance; 
-                if(d < (currentWeapon==='FIST'?3:60)) { 
+                // 2. СНАЙПЕР ЛЁХА: Дальность увеличена с 60 до 150
+                if(d < (currentWeapon==='FIST'?3:150)) { 
                     let t = hits[0].object; 
                     while(t.parent && t.parent.type!=='Scene') t=t.parent; 
                     
