@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA ЛЁХА (V12.3 - ОПАСНЫЕ ПОГОНИ)</title>
+    <title>GTA ЛЁХА (V12.4 - АКТИВНЫЙ ПАТРУЛЬ)</title>
     <style>
         /* --- СТИЛИ (Без изменений) --- */
         body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; user-select: none; background: #000; }
@@ -29,15 +29,17 @@
         }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-        /* BOUNDARY WARNING (НОВЫЙ СТИЛЬ) */
+        /* BOUNDARY WARNING (НОВЫЙ ТЕКСТ) */
         #boundaryWarning {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: none; justify-content: center; align-items: center;
-            background: rgba(255, 0, 0, 0.2); 
+            background: rgba(255, 0, 0, 0.4); /* Чуть более заметный фон */
             color: white; font-size: 4em; font-weight: bold;
             text-shadow: 0 0 10px black;
             z-index: 50; 
             pointer-events: none;
+            text-align: center;
+            padding: 20px;
         }
 
         /* --- МИНИ-КАРТА --- */
@@ -183,7 +185,7 @@
         <div id="hpDisplay" style="color: red; margin-top: 5px;">❤️ ЗДОРОВЬЕ: 100</div>
         <div id="weaponDisplay" style="color: orange; margin-top: 5px;">👊 КУЛАКИ</div>
         <div id="wantedLevel" style="color: white; margin-top: 5px;">★ РОЗЫСК: 0</div>
-        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.3 (ОПАСНЫЕ ПОГОНИ)</div>
+        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.4 (АКТИВНЫЙ ПАТРУЛЬ)</div>
     </div>
     
     <div id="miniMap">
@@ -224,7 +226,7 @@
         </ul>
 
         <h4>🚨 Розыск и Полиция</h4>
-        <p>Каждое убийство (пешехода или полицейского) повышает уровень розыска (★). Полиция теперь стреляет издалека, а в машине будет вас **преследовать и обстреливать**!</p>
+        <p>Каждое убийство (пешехода или полицейского) повышает уровень розыска (★). Полиция теперь стреляет издалека, а в машине будет вас **преследовать и обстреливать**! Полицейских стало больше — будь осторожен!</p>
 
         <button onclick="document.getElementById('infoBox').style.display='none'">ЗАКРЫТЬ</button>
     </div>
@@ -238,9 +240,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.3) ===
+        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.4) ===
         const CAMERA_HEIGHT = 1.5;
-        const NPC_COUNT = 150; 
+        const NPC_COUNT = 200;       // Увеличено общее количество NPC
+        const POLICE_COUNT = 20;     // Увеличено количество полицейских
         const TRAFFIC_CAR_COUNT = 15; 
         const RESPAWN_INTERVAL = 90 * 1000; 
         const MAP_SIZE = 400; 
@@ -311,7 +314,10 @@
             
             spawnTraffic();
             
-            spawnNPCs(NPC_COUNT); 
+            // Инициализация NPC и Полиции
+            spawnNPCs(POLICE_COUNT, true);
+            spawnNPCs(NPC_COUNT - POLICE_COUNT, false);
+            
             setInterval(respawnNPCs, RESPAWN_INTERVAL); 
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -336,32 +342,21 @@
 
         // === НОВАЯ ФУНКЦИЯ: СПЕЦИАЛЬНАЯ ПАРКОВКА У СПАВНА ===
         function spawnParkingLotCars() {
-            // 1. ЛИЧНАЯ КРАСНАЯ МАШИНА ЛЁХИ (рядом со стартом)
-            const myCar = createCarMesh(0xff0000, false); 
-            myCar.position.set(-10, 0, 0); 
-            myCar.rotation.y = Math.PI / 2; // Повернута для удобного входа
-            myCar.castShadow = true; 
-            cars.push(myCar); 
-            scene.add(myCar);
-            collisionObjects.push(myCar.children[0]); // Добавление коллизии
+            const spawnCars = [
+                { color: 0xff0000, isPolice: false, x: -10, z: 0 },
+                { color: 0x00FF00, isPolice: false, x: -15, z: 0 },
+                { color: 0, isPolice: true, x: -20, z: 0 }
+            ];
 
-            // 2. СЛУЧАЙНАЯ ГРАЖДАНСКАЯ МАШИНА
-            const civilCar = createCarMesh(0x00FF00, false); 
-            civilCar.position.set(-15, 0, 0); 
-            civilCar.rotation.y = Math.PI / 2;
-            civilCar.castShadow = true; 
-            cars.push(civilCar); 
-            scene.add(civilCar);
-            collisionObjects.push(civilCar.children[0]);
-
-            // 3. ПОЛИЦЕЙСКАЯ МАШИНА
-            const policeCarSpawn = createCarMesh(0, true); 
-            policeCarSpawn.position.set(-20, 0, 0); 
-            policeCarSpawn.rotation.y = Math.PI / 2;
-            policeCarSpawn.castShadow = true; 
-            cars.push(policeCarSpawn); 
-            scene.add(policeCarSpawn);
-            collisionObjects.push(policeCarSpawn.children[0]);
+            spawnCars.forEach(sc => {
+                const car = createCarMesh(sc.color, sc.isPolice);
+                car.position.set(sc.x, 0, sc.z);
+                car.rotation.y = Math.PI / 2;
+                car.castShadow = true;
+                cars.push(car);
+                scene.add(car);
+                collisionObjects.push(car.children[0]);
+            });
         }
 
 
@@ -419,7 +414,7 @@
             collisionObjects.push(l4);
         }
         
-        // --- ДВИЖЕНИЕ ПЕШЕХОДА (Добавлена проверка на границу) ---
+        // --- ДВИЖЕНИЕ ПЕШЕХОДА (ОБНОВЛЕН ТЕКСТ) ---
         function movePlayer(dt) {
             const speed = 8; const dir = new THREE.Vector3();
             if (moveFwd) dir.z -= 1; if (moveBwd) dir.z += 1; if (moveLft) dir.x -= 1; if (moveRgt) dir.x += 1;
@@ -447,13 +442,13 @@
             player.translateX(dir.x); player.translateZ(dir.z); 
             player.position.y = CAMERA_HEIGHT;
 
-            // Предупреждение о невидимой границе
+            // Предупреждение о невидимой границе (НОВЫЙ ТЕКСТ)
             const boundaryWarning = document.getElementById('boundaryWarning');
             const BOUNDARY_RANGE = 50; 
             
             if (Math.abs(player.position.x) > MAP_SIZE - BOUNDARY_RANGE || Math.abs(player.position.z) > MAP_SIZE - BOUNDARY_RANGE) {
                  boundaryWarning.style.display = 'flex';
-                 boundaryWarning.innerText = "🛑 ЛЁХА, НЕ ЛЕЗЬ СЮДА!";
+                 boundaryWarning.innerText = "🛑 ЛЁХА ДУРАЧОК НЕ ЛЕЗЬ ТУДА (СВОБОДА НЕ НАШЕ МЕСТО)";
             } else {
                  boundaryWarning.style.display = 'none';
             }
@@ -466,7 +461,7 @@
         // === ГЛОБАЛЬНАЯ ФУНКЦИЯ ВЫСТРЕЛА NPC ===
         function npcShoot(npc) {
             if (npc.userData.lastShot && performance.now() - npc.userData.lastShot < 1000) return; 
-            if (currentCar) return; // Пешие менты не стреляют по машине
+            if (currentCar) return; 
 
             playSound('shoot'); 
             npc.userData.lastShot = performance.now();
@@ -489,7 +484,6 @@
                     return false;
                 });
 
-                // СНАЙПЕР ЛЁХА: Полицейские теперь стреляют на 150
                 if (hitPlayer && hitPlayer.distance < 150) { 
                     const damage = Math.floor(Math.random() * 3) + 3; // Урон 3-5 HP
                     playerHP -= damage;
@@ -506,19 +500,16 @@
         function policeCarAttack(pCar, tCar) {
             const distance = pCar.position.distanceTo(tCar.position);
             const attackRange = 75; 
-            const attackCooldown = 1500; // 1.5 секунды между выстрелами
+            const attackCooldown = 1500; 
 
-            // 1. Проверка дистанции и кулдауна
             if (distance < attackRange && pCar.userData.lastShotTime + attackCooldown < performance.now()) {
                 pCar.userData.lastShotTime = performance.now();
                 playSound('shoot'); 
 
-                // 2. Проверка на попадание (простая 70% вероятность)
                 if (Math.random() < 0.7) { 
-                    const damage = Math.floor(Math.random() * 3) + 3; // 3, 4, или 5 урона
+                    const damage = Math.floor(Math.random() * 3) + 3; 
                     playerHP -= damage;
                     
-                    // Обновляем HUD
                     document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${playerHP}`;
                     
                     if (playerHP <= 0) {
@@ -529,7 +520,7 @@
         }
 
 
-        // === МИНИ-КАРТА (ФИНАЛЬНЫЙ ФИКС СЛЕДОВАНИЯ) ===
+        // === МИНИ-КАРТА ===
         function updateMiniMap() {
             const mapDiv = document.getElementById('mapContent');
             const mapW = MINIMAP_SIZE_PX;
@@ -648,12 +639,10 @@
 
             // --- ЛОГИКА ПОЛИЦЕЙСКОЙ МАШИНЫ ---
             if (wantedLevel > 0 && currentCar && !policeCar) {
-                // Ищем любую доступную машину полиции, включая припаркованную
                 const availableCars = cars.filter(c => c.userData.isPoliceCar && c !== currentCar && !c.userData.isBeingUsedByPolice);
                 if (availableCars.length > 0) {
                     policeCar = availableCars[0]; 
                     policeCar.userData.isBeingUsedByPolice = true;
-                    // Инициализируем скорость
                     policeCar.userData.speed = 0; 
                     policeCar.userData.lastShotTime = performance.now();
                 }
@@ -680,18 +669,20 @@
                 pCar.userData.speed = Math.min(pCar.userData.speed + 15 * dt, 40);
                 pCar.translateZ(-pCar.userData.speed * dt); 
                 
-                // --- НОВОЕ: АТАКА ПОЛИЦИИ НА МАШИНУ ---
                 policeCarAttack(policeCar, currentCar);
             }
             
-            // --- ЛОГИКА NPC: ДВИЖЕНИЕ, ПАНИКА И СТРЕЛЬБА ---
+            // --- ЛОГИКА NPC: ДВИЖЕНИЕ, ПАНИКА И СТРЕЛЬБА (Улучшен обход границ) ---
             const targetPos = currentCar ? currentCar.position : player.position;
             
             npcs.forEach(npc => {
                 npc.position.y = 0; 
                 let speed = 1.5;
                 let targetDir = npc.userData.dir.clone();
+                let shouldTurn = false;
+                const NPC_BOUNDARY_FUDGE = 20; // Дистанция для раннего поворота от края
 
+                // 1. Паника
                 if (npc.userData.state === 'PANIC') { 
                     speed = 9; 
                     const danger = currentCar ? currentCar.position : player.position; 
@@ -702,11 +693,12 @@
                     runAwayDir.normalize();
                     targetDir.lerp(runAwayDir, 0.15); 
                 } 
+                // 2. Полиция
                 else if (npc.userData.isPolice && wantedLevel > 0) { 
                     const distance = npc.position.distanceTo(targetPos);
 
                     if (currentCar) {
-                        speed = 0; // Пешие менты стоят, если игрок в машине
+                        speed = 0; 
                         npc.lookAt(targetPos);
                     } else {
                         speed = 8; 
@@ -715,7 +707,6 @@
                         npc.lookAt(targetPos);
 
                         if (distance < 2) endGame(); 
-
                         if (distance < 150 && npc.userData.hasWeapon === 'PISTOL') { 
                              npcShoot(npc);
                         }
@@ -724,17 +715,31 @@
 
                 const collisionDist = npc.userData.state === 'PANIC' ? 6 : 4; 
                 
+                // --- ПРОВЕРКА ПРЕДУПРЕЖДЕНИЯ ГРАНИЦЫ ---
+                const checkPosAhead = npc.position.clone().add(targetDir.clone().normalize().multiplyScalar(15));
+                if (Math.abs(checkPosAhead.x) > MAP_SIZE - NPC_BOUNDARY_FUDGE || Math.abs(checkPosAhead.z) > MAP_SIZE - NPC_BOUNDARY_FUDGE) {
+                    shouldTurn = true;
+                }
+                
+                // --- ПРОВЕРКА СТЕН И ЗДАНИЙ ---
                 raycaster.set(new THREE.Vector3(npc.position.x, 1, npc.position.z), targetDir);
                 const hits = raycaster.intersectObjects(collisionObjects);
                 
                 if (hits.length > 0 && hits[0].distance < collisionDist) { 
+                    shouldTurn = true; 
+                } 
+                
+                if (shouldTurn) {
+                    // Поворот, чтобы избежать препятствия или границы
                     const rotationAngle = Math.PI/3 + Math.random() * Math.PI/3; 
                     targetDir.applyAxisAngle(new THREE.Vector3(0,1,0), rotationAngle); 
-                } 
+                }
                 
                 npc.userData.dir.copy(targetDir.normalize()); 
 
                 const nextPos = npc.position.clone().add(npc.userData.dir.clone().multiplyScalar(speed * dt));
+                
+                // Финальная проверка на выход за пределы (на случай, если превентивный поворот не сработал)
                 if (Math.abs(nextPos.x) > MAP_SIZE || Math.abs(nextPos.z) > MAP_SIZE) {
                     npc.userData.dir.applyAxisAngle(new THREE.Vector3(0,1,0), Math.PI + (Math.random()-0.5)*0.5);
                 } else {
@@ -764,12 +769,24 @@
             const wall3 = new THREE.Mesh(new THREE.BoxGeometry(BORDER_COLLISION_SIZE, VISIBLE_WALL_HEIGHT, MAP_SIZE * 2), material); wall3.position.set(-bounds, VISIBLE_WALL_HEIGHT/2, 0); collisionObjects.push(wall3); scene.add(wall3);
             const wall4 = new THREE.Mesh(new THREE.BoxGeometry(BORDER_COLLISION_SIZE, VISIBLE_WALL_HEIGHT, MAP_SIZE * 2), material); wall4.position.set(bounds, VISIBLE_WALL_HEIGHT/2, 0); collisionObjects.push(wall4); scene.add(wall4);
         }
+        
+        // Улучшенная функция респауна
         function respawnNPCs() {
-            const missingCount = npcs.length < NPC_COUNT ? NPC_COUNT - npcs.length : 0;
-            if (missingCount > 0) {
-                spawnNPCs(missingCount); 
+            const currentCivs = npcs.filter(n => !n.userData.isPolice).length;
+            const currentPolice = npcs.filter(n => n.userData.isPolice).length;
+            
+            const missingCivs = NPC_COUNT - POLICE_COUNT - currentCivs;
+            const missingPolice = POLICE_COUNT - currentPolice;
+
+            if (missingCivs > 0) {
+                spawnNPCs(missingCivs, false);
+            }
+            // Гарантируем, что всегда будет нужное количество полиции
+            if (missingPolice > 0) {
+                spawnNPCs(missingPolice, true);
             }
         }
+        
         function createCity() {
             const ground = new THREE.Mesh(new THREE.PlaneGeometry(MAP_SIZE * 2 + 100, MAP_SIZE * 2 + 100), new THREE.MeshStandardMaterial({ color: 0xCCCCCC })); ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
             const parkingLot = new THREE.Mesh(new THREE.PlaneGeometry(30, 40), new THREE.MeshStandardMaterial({ color: 0x222222 })); parkingLot.rotation.x = -Math.PI/2; parkingLot.position.set(-15, 0.02, 0); parkingLot.receiveShadow = true; scene.add(parkingLot); 
@@ -825,7 +842,6 @@
                 group.add(light);
             }
 
-            // Добавлено lastShotTime для полицейской машины
             group.userData = { speed: 0, steering: 0, isPoliceCar: isPolice, isBeingUsedByPolice: false, lastShotTime: 0 };
             return group;
         }
@@ -835,7 +851,6 @@
             return {x, z};
         }
         
-        // === ИЗМЕНЕННАЯ ФУНКЦИЯ: ЗАПУСК ТРАФИКА ===
         function spawnTraffic() {
             for(let i=0; i<TRAFFIC_CAR_COUNT; i++) {
                 const isPolice = Math.random() < 0.1; 
@@ -855,9 +870,10 @@
                 collisionObjects.push(car.children[0]);
             }
         }
-        function spawnNPCs(count) {
+        
+        // Обновленная функция spawnNPCs с флагом isPolice
+        function spawnNPCs(count, isPolice) {
             for(let i=0; i<count; i++) {
-                const isPolice = (i===0);
                 const group = new THREE.Group();
                 const bodyColor = isPolice ? 0x000088 : Math.random()*0xffffff;
                 const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.5, 0.3), new THREE.MeshStandardMaterial({color: bodyColor})); body.position.y = 0.75;
@@ -869,6 +885,7 @@
                 scene.add(group); npcs.push(group);
             }
         }
+        
         function tryEnterCar() {
             if (currentCar) {
                 player.position.copy(currentCar.position); player.position.x -= 3; player.position.y = CAMERA_HEIGHT; player.visible = true; player.add(camera); camera.position.set(0,0,0); camera.rotation.set(0,0,0); currentCar = null; document.getElementById('crosshair').style.display = 'block'; document.getElementById('weaponDisplay').style.display = 'block'; weaponGroup.visible = true;
@@ -895,7 +912,7 @@
             npcs.splice(npcs.indexOf(npc), 1); 
             npcs.forEach(n => { if(!n.userData.isPolice) n.userData.state = 'PANIC'; }); 
             document.getElementById('wantedLevel').innerText = "★ РОЗЫСК: " + wantedLevel; 
-            spawnNPCs(1); 
+            // Респаун будет произведен через setInterval(respawnNPCs, ...)
         }
         function createBlood(pos) { for(let k=0; k<8; k++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color:0x880000})); m.position.copy(pos); m.position.x+=(Math.random()-0.5); m.position.z+=(Math.random()-0.5); m.position.y=0.1; scene.add(m); particles.push({mesh:m, life:100}); } }
         function updateParticles() { for(let i=particles.length-1; i>=0; i--) { particles[i].life--; if(particles[i].life<=0) { scene.remove(particles[i].mesh); particles.splice(i,1); } } }
