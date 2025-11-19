@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA ЛЁХА (V12.4 - АКТИВНЫЙ ПАТРУЛЬ)</title>
+    <title>GTA ЛЁХА (V12.6 - ЛЁХА НЕ ПОТЕРЯЕТСЯ)</title>
     <style>
-        /* --- СТИЛИ (Без изменений) --- */
+        /* --- СТИЛИ (Обновлен маркер игрока) --- */
         body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; user-select: none; background: #000; }
         canvas { display: block; width: 100vw; height: 100vh; }
 
@@ -29,11 +29,11 @@
         }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-        /* BOUNDARY WARNING (НОВЫЙ ТЕКСТ) */
+        /* BOUNDARY WARNING */
         #boundaryWarning {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: none; justify-content: center; align-items: center;
-            background: rgba(255, 0, 0, 0.4); /* Чуть более заметный фон */
+            background: rgba(255, 0, 0, 0.4); 
             color: white; font-size: 4em; font-weight: bold;
             text-shadow: 0 0 10px black;
             z-index: 50; 
@@ -66,7 +66,16 @@
             border-radius: 50%;
             transform: translate(-50%, -50%);
         }
-        #playerMarker { background-color: lime; border: 1px solid black; z-index: 5; }
+        /* --- ИЗМЕНЕНИЕ: Увеличение размера маркера игрока --- */
+        #playerMarker { 
+            background-color: lime; 
+            border: 2px solid white; /* Добавляем белый ободок для контраста */
+            z-index: 5; 
+            width: 12px; /* Увеличиваем размер */
+            height: 12px;
+            box-shadow: 0 0 5px rgba(0, 255, 0, 0.8); /* Свечение */
+        }
+        /* --------------------------------------------------- */
         .policeMarker { background-color: red; border: 1px solid black; z-index: 4; }
         .mapBuilding {
             position: absolute;
@@ -76,15 +85,15 @@
             opacity: 0.8;
         }
 
-        /* --- НОВОЕ МЕНЮ: КРАСИВОЕ И СОЧНОЕ --- */
+        /* --- МЕНЮ --- */
         #menu {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0f0f0f 0%, #3a0000 100%); /* Фон с градиентом */
-            background-size: 200% 200%; /* Для анимации градиента */
+            background: linear-gradient(135deg, #0f0f0f 0%, #3a0000 100%); 
+            background-size: 200% 200%; 
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 100; color: white;
             box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
-            animation: backgroundShift 15s infinite alternate; /* Анимация фона */
+            animation: backgroundShift 15s infinite alternate; 
         }
         @keyframes backgroundShift {
             0% { background-position: 0% 50%; }
@@ -93,10 +102,10 @@
 
         #menu h1 { 
             font-size: 7em; color: #ff0000; margin: 0; 
-            text-shadow: 6px 6px 0px #000, 8px 8px 15px rgba(255, 0, 0, 0.7); /* Сочный тень */
+            text-shadow: 6px 6px 0px #000, 8px 8px 15px rgba(255, 0, 0, 0.7); 
             font-family: 'Impact', sans-serif;
             letter-spacing: 10px;
-            animation: titlePulse 2s infinite alternate; /* Анимация заголовка */
+            animation: titlePulse 2s infinite alternate; 
         }
         @keyframes titlePulse {
             from { transform: scale(1); }
@@ -111,7 +120,7 @@
         #menu button {
             background: #ffaa00;
             color: black;
-            border: 5px solid #ff0000; /* Жирная красная рамка */
+            border: 5px solid #ff0000; 
             padding: 20px 40px;
             font-size: 1.8em;
             cursor: pointer;
@@ -119,20 +128,27 @@
             transition: all 0.3s ease;
             font-weight: bold;
             box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            transform: skew(-5deg); /* Наклон кнопки */
+            transform: skew(-5deg); 
         }
         #menu button:hover {
             background: #ffcc00;
             box-shadow: 0 0 30px rgba(255, 204, 0, 0.9);
-            transform: skew(-5deg) scale(1.05); /* Легкое увеличение при наведении */
+            transform: skew(-5deg) scale(1.05); 
             border-color: #ffffff;
         }
         
-        /* BUSTED SCREEN */
+        /* BUSTED SCREEN (обновленный) */
         #bustedScreen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); color: red;
             flex-direction: column; justify-content: center; align-items: center; z-index: 100;
+        }
+        #bustedScreen h1 {
+            font-family: Impact; letter-spacing: 5px; color: red;
+            font-size: 6em;
+        }
+        #bustedScreen h2 {
+            font-size: 2.5em; color: #fff; margin-top: 10px;
         }
 
         /* HELP BOX */
@@ -185,7 +201,7 @@
         <div id="hpDisplay" style="color: red; margin-top: 5px;">❤️ ЗДОРОВЬЕ: 100</div>
         <div id="weaponDisplay" style="color: orange; margin-top: 5px;">👊 КУЛАКИ</div>
         <div id="wantedLevel" style="color: white; margin-top: 5px;">★ РОЗЫСК: 0</div>
-        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.4 (АКТИВНЫЙ ПАТРУЛЬ)</div>
+        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.6 (ЛЁХА НЕ ПОТЕРЯЕТСЯ)</div>
     </div>
     
     <div id="miniMap">
@@ -213,7 +229,7 @@
 
         <h4>📖 Сюжет и Смысл</h4>
         <p>Ты, Лёха, — крутой чувак в большом городе, который всегда попадает в какие-то передряги. Твоя задача — **выжить, поднять уровень розыска и избегать ментов!**</p>
-        <p>Смысл игры: **Устраивай хаос, угоняй тачки и беги от преследования!**</p>
+        <p>**ВНИМАНИЕ:** Не лезь за красную черту, это больно!</p>
 
         <h4>🎮 Управление</h4>
         <ul>
@@ -232,18 +248,18 @@
     </div>
 
     <div id="bustedScreen">
-        <h1 style="font-family: Impact; letter-spacing: 5px; color: red;">ПОЙМАН</h1>
-        <h2 style="font-size: 1.5em; color: #fff;">ШО ТУТ ДУМАЛ В СКАЗКУ ПОПАЛ</h2>
+        <h1>ПОЙМАН</h1>
+        <h2>ШО ТУТ ДУМАЛ В СКАЗКУ ПОПАЛ</h2>
         <button onclick="location.reload()" style="background: red; border-color: #ff3333;">ПОВТОРИТЬ</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.4) ===
+        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.6) ===
         const CAMERA_HEIGHT = 1.5;
-        const NPC_COUNT = 200;       // Увеличено общее количество NPC
-        const POLICE_COUNT = 20;     // Увеличено количество полицейских
+        const NPC_COUNT = 200;       
+        const POLICE_COUNT = 20;     
         const TRAFFIC_CAR_COUNT = 15; 
         const RESPAWN_INTERVAL = 90 * 1000; 
         const MAP_SIZE = 400; 
@@ -253,6 +269,8 @@
         const MINIMAP_SIZE_PX = 200; 
         const MINIMAP_SCALE = 0.8; 
         const MAP_VIEW_RADIUS = MINIMAP_SIZE_PX / MINIMAP_SCALE / 2; 
+        const BOUNDARY_RANGE = 50; 
+        const BOUNDARY_DAMAGE_AREA = MAP_SIZE - BOUNDARY_RANGE;
         
         // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
         let scene, camera, renderer;
@@ -314,7 +332,6 @@
             
             spawnTraffic();
             
-            // Инициализация NPC и Полиции
             spawnNPCs(POLICE_COUNT, true);
             spawnNPCs(NPC_COUNT - POLICE_COUNT, false);
             
@@ -323,7 +340,7 @@
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
-            document.body.appendChild(renderer.domElement);
+            document.body.appendChild(renderer.renderer.domElement);
 
             raycaster = new THREE.Raycaster();
             
@@ -340,7 +357,6 @@
             animate();
         }
 
-        // === НОВАЯ ФУНКЦИЯ: СПЕЦИАЛЬНАЯ ПАРКОВКА У СПАВНА ===
         function spawnParkingLotCars() {
             const spawnCars = [
                 { color: 0xff0000, isPolice: false, x: -10, z: 0 },
@@ -360,7 +376,6 @@
         }
 
 
-        // === ФУНКЦИЯ ДЛЯ СОЗДАНИЯ ПАСХАЛКИ ===
         function createEasterEggPullUp(x, z, rotY) {
             const group = new THREE.Group();
             const bodyColor = (x > 0) ? 0xcc0000 : 0x0000cc; 
@@ -386,7 +401,6 @@
             scene.add(group);
         }
 
-        // === СОЗДАНИЕ СКАМЕЙКИ ===
         function createBench(x, y, z, rotY) {
             const plank = new THREE.Mesh(new THREE.BoxGeometry(3, 0.2, 0.8), new THREE.MeshStandardMaterial({color: 0x8b4513})); 
             plank.position.y = 0.8;
@@ -414,7 +428,7 @@
             collisionObjects.push(l4);
         }
         
-        // --- ДВИЖЕНИЕ ПЕШЕХОДА (ОБНОВЛЕН ТЕКСТ) ---
+        // --- ДВИЖЕНИЕ ПЕШЕХОДА (ОБНОВЛЕНА КОЛЛИЗИЯ И УРОН) ---
         function movePlayer(dt) {
             const speed = 8; const dir = new THREE.Vector3();
             if (moveFwd) dir.z -= 1; if (moveBwd) dir.z += 1; if (moveLft) dir.x -= 1; if (moveRgt) dir.x += 1;
@@ -424,31 +438,82 @@
             const newPos = player.position.clone().add(moveVector);
             newPos.y = 0;
 
+            let collided = false;
+
             for(let obj of collisionObjects) {
                 const oPos = new THREE.Vector3();
                 obj.updateWorldMatrix(true, false);
                 oPos.setFromMatrixPosition(obj.matrixWorld); 
                 oPos.y = 0;
 
-                if (newPos.distanceTo(oPos) < PLAYER_COLLISION_RADIUS) { 
-                    const push = newPos.clone().sub(oPos).normalize().multiplyScalar(1.0); 
-                    player.position.x += push.x; 
-                    player.position.z += push.z;
+                let isBuilding = obj.geometry.type === 'BoxGeometry' && obj.geometry.parameters.width > 10;
+
+                if (isBuilding) { 
+                    // КОЛЛИЗИЯ СО ЗДАНИЯМИ (AABB-подобная)
+                    const w = obj.geometry.parameters.width / 2;
+                    const d = obj.geometry.parameters.depth / 2;
+                    const cushion = PLAYER_COLLISION_RADIUS;
+
+                    if (
+                        newPos.x > oPos.x - w - cushion && newPos.x < oPos.x + w + cushion &&
+                        newPos.z > oPos.z - d - cushion && newPos.z < oPos.z + d + cushion
+                    ) {
+                        // Рассчитываем, куда меньше всего нужно толкать, чтобы выйти из коллизии
+                        const overlapX = Math.min(newPos.x - (oPos.x - w), (oPos.x + w) - newPos.x);
+                        const overlapZ = Math.min(newPos.z - (oPos.z - d), (oPos.z + d) - newPos.z);
+                        
+                        let push = new THREE.Vector3();
+                        if (overlapX < overlapZ) {
+                            const dirX = newPos.x > oPos.x ? 1 : -1;
+                            push.x = dirX * (cushion - overlapX);
+                        } else {
+                            const dirZ = newPos.z > oPos.z ? 1 : -1;
+                            push.z = dirZ * (cushion - overlapZ);
+                        }
+
+                        player.position.add(push); 
+                        dir.set(0, 0, 0); 
+                        collided = true;
+                        break;
+                    }
+                } else if (newPos.distanceTo(oPos) < PLAYER_COLLISION_RADIUS) { 
+                    // КОЛЛИЗИЯ С МЕЛКИМИ ОБЪЕКТАМИ (машины, скамейки, деревья)
+                    const push = newPos.clone().sub(oPos).normalize().multiplyScalar(PLAYER_COLLISION_RADIUS - newPos.distanceTo(oPos)); 
+                    player.position.add(push);
                     dir.set(0, 0, 0); 
+                    collided = true;
                     break;
                 }
             }
-            
-            player.translateX(dir.x); player.translateZ(dir.z); 
+
+            if (!collided) {
+                player.translateX(dir.x); 
+                player.translateZ(dir.z); 
+            }
             player.position.y = CAMERA_HEIGHT;
 
-            // Предупреждение о невидимой границе (НОВЫЙ ТЕКСТ)
+            // --- ЛОГИКА УРОНА ЗА ГРАНИЦЕЙ ---
             const boundaryWarning = document.getElementById('boundaryWarning');
-            const BOUNDARY_RANGE = 50; 
+            let isOutOfBounds = Math.abs(player.position.x) > BOUNDARY_DAMAGE_AREA || Math.abs(player.position.z) > BOUNDARY_DAMAGE_AREA;
             
-            if (Math.abs(player.position.x) > MAP_SIZE - BOUNDARY_RANGE || Math.abs(player.position.z) > MAP_SIZE - BOUNDARY_RANGE) {
+            if (isOutOfBounds) {
                  boundaryWarning.style.display = 'flex';
                  boundaryWarning.innerText = "🛑 ЛЁХА ДУРАЧОК НЕ ЛЕЗЬ ТУДА (СВОБОДА НЕ НАШЕ МЕСТО)";
+                 
+                 if (moveFwd || moveBwd || moveLft || moveRgt) {
+                     // Проверка, что игрок двигается дальше, а не к центру
+                     const movingOutX = Math.abs(player.position.x) > BOUNDARY_DAMAGE_AREA && Math.sign(player.position.x) === Math.sign(moveVector.x);
+                     const movingOutZ = Math.abs(player.position.z) > BOUNDARY_DAMAGE_AREA && Math.sign(player.position.z) === Math.sign(moveVector.z);
+                      
+                     if (movingOutX || movingOutZ) {
+                         // Урон 30-35 в секунду (умножаем на 2, чтобы быстрее)
+                         const damagePerSecond = Math.floor(Math.random() * 6) + 30; 
+                         playerHP -= damagePerSecond * dt * 2; 
+                          
+                         if (playerHP <= 0) { endGame(); }
+                         document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${Math.max(0, Math.floor(playerHP))}`;
+                     }
+                 }
             } else {
                  boundaryWarning.style.display = 'none';
             }
@@ -458,7 +523,7 @@
             if (moveFwd||moveBwd||moveLft||moveRgt) weaponGroup.position.y = -0.4 + Math.sin(performance.now()*0.015)*0.02;
         }
 
-        // === ГЛОБАЛЬНАЯ ФУНКЦИЯ ВЫСТРЕЛА NPC ===
+        // === ГЛОБАЛЬНАЯ ФУНКЦИЯ ВЫСТРЕЛА NPC (Урон увеличен и проверен) ===
         function npcShoot(npc) {
             if (npc.userData.lastShot && performance.now() - npc.userData.lastShot < 1000) return; 
             if (currentCar) return; 
@@ -469,25 +534,30 @@
             const targetPos = player.position; 
             const direction = new THREE.Vector3().subVectors(targetPos, npc.position).normalize();
             
+            // Задаем луч от NPC в сторону игрока
             raycaster.set(new THREE.Vector3(npc.position.x, 1.5, npc.position.z), direction);
             
-            const intersectables = collisionObjects.concat(npcs).concat([player]);
-            const hits = raycaster.intersectObjects(intersectables);
+            const intersectables = collisionObjects.concat(npcs).filter(o => o !== npc);
+            const hits = raycaster.intersectObjects(intersectables.concat([player]), true); 
             
             if (hits.length > 0) {
-                const hitPlayer = hits.find(hit => {
-                    let obj = hit.object;
-                    while (obj.parent) {
-                        if (obj === player) return true;
-                        obj = obj.parent;
+                const hit = hits[0];
+                
+                // Проверяем, попал ли луч в игрока или в его камеру
+                let hitPlayer = false;
+                let obj = hit.object;
+                while (obj.parent) {
+                    if (obj === player) {
+                        hitPlayer = true;
+                        break;
                     }
-                    return false;
-                });
+                    obj = obj.parent;
+                }
 
-                if (hitPlayer && hitPlayer.distance < 150) { 
-                    const damage = Math.floor(Math.random() * 3) + 3; // Урон 3-5 HP
+                if (hitPlayer && hit.distance < 150) { 
+                    const damage = Math.floor(Math.random() * 10) + 15; 
                     playerHP -= damage;
-                    document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${playerHP}`;
+                    document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${Math.max(0, Math.floor(playerHP))}`;
                     
                     if (playerHP <= 0) {
                         endGame(); 
@@ -496,7 +566,7 @@
             }
         }
         
-        // === НОВАЯ ФУНКЦИЯ: АТАКА ПОЛИЦЕЙСКОЙ МАШИНЫ ===
+        // === АТАКА ПОЛИЦЕЙСКОЙ МАШИНЫ (Урон увеличен и проверен) ===
         function policeCarAttack(pCar, tCar) {
             const distance = pCar.position.distanceTo(tCar.position);
             const attackRange = 75; 
@@ -507,10 +577,10 @@
                 playSound('shoot'); 
 
                 if (Math.random() < 0.7) { 
-                    const damage = Math.floor(Math.random() * 3) + 3; 
+                    const damage = Math.floor(Math.random() * 8) + 10; 
                     playerHP -= damage;
                     
-                    document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${playerHP}`;
+                    document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${Math.max(0, Math.floor(playerHP))}`;
                     
                     if (playerHP <= 0) {
                         endGame();
@@ -672,7 +742,7 @@
                 policeCarAttack(policeCar, currentCar);
             }
             
-            // --- ЛОГИКА NPC: ДВИЖЕНИЕ, ПАНИКА И СТРЕЛЬБА (Улучшен обход границ) ---
+            // --- ЛОГИКА NPC: ДВИЖЕНИЕ, ПАНИКА И СТРЕЛЬБА ---
             const targetPos = currentCar ? currentCar.position : player.position;
             
             npcs.forEach(npc => {
@@ -680,9 +750,8 @@
                 let speed = 1.5;
                 let targetDir = npc.userData.dir.clone();
                 let shouldTurn = false;
-                const NPC_BOUNDARY_FUDGE = 20; // Дистанция для раннего поворота от края
+                const NPC_BOUNDARY_FUDGE = 20; 
 
-                // 1. Паника
                 if (npc.userData.state === 'PANIC') { 
                     speed = 9; 
                     const danger = currentCar ? currentCar.position : player.position; 
@@ -693,7 +762,6 @@
                     runAwayDir.normalize();
                     targetDir.lerp(runAwayDir, 0.15); 
                 } 
-                // 2. Полиция
                 else if (npc.userData.isPolice && wantedLevel > 0) { 
                     const distance = npc.position.distanceTo(targetPos);
 
@@ -715,13 +783,11 @@
 
                 const collisionDist = npc.userData.state === 'PANIC' ? 6 : 4; 
                 
-                // --- ПРОВЕРКА ПРЕДУПРЕЖДЕНИЯ ГРАНИЦЫ ---
                 const checkPosAhead = npc.position.clone().add(targetDir.clone().normalize().multiplyScalar(15));
                 if (Math.abs(checkPosAhead.x) > MAP_SIZE - NPC_BOUNDARY_FUDGE || Math.abs(checkPosAhead.z) > MAP_SIZE - NPC_BOUNDARY_FUDGE) {
                     shouldTurn = true;
                 }
                 
-                // --- ПРОВЕРКА СТЕН И ЗДАНИЙ ---
                 raycaster.set(new THREE.Vector3(npc.position.x, 1, npc.position.z), targetDir);
                 const hits = raycaster.intersectObjects(collisionObjects);
                 
@@ -730,7 +796,6 @@
                 } 
                 
                 if (shouldTurn) {
-                    // Поворот, чтобы избежать препятствия или границы
                     const rotationAngle = Math.PI/3 + Math.random() * Math.PI/3; 
                     targetDir.applyAxisAngle(new THREE.Vector3(0,1,0), rotationAngle); 
                 }
@@ -739,7 +804,6 @@
 
                 const nextPos = npc.position.clone().add(npc.userData.dir.clone().multiplyScalar(speed * dt));
                 
-                // Финальная проверка на выход за пределы (на случай, если превентивный поворот не сработал)
                 if (Math.abs(nextPos.x) > MAP_SIZE || Math.abs(nextPos.z) > MAP_SIZE) {
                     npc.userData.dir.applyAxisAngle(new THREE.Vector3(0,1,0), Math.PI + (Math.random()-0.5)*0.5);
                 } else {
@@ -764,13 +828,13 @@
                 roughness: 0.9, 
                 metalness: 0.1 
             }); 
+            // Это невидимые коллизионные стены, чтобы NPC не выходили за границу.
             const wall1 = new THREE.Mesh(new THREE.BoxGeometry(MAP_SIZE * 2 + BORDER_COLLISION_SIZE * 2, VISIBLE_WALL_HEIGHT, BORDER_COLLISION_SIZE), material); wall1.position.set(0, VISIBLE_WALL_HEIGHT/2, -bounds); collisionObjects.push(wall1); scene.add(wall1);
             const wall2 = new THREE.Mesh(new THREE.BoxGeometry(MAP_SIZE * 2 + BORDER_COLLISION_SIZE * 2, VISIBLE_WALL_HEIGHT, BORDER_COLLISION_SIZE), material); wall2.position.set(0, VISIBLE_WALL_HEIGHT/2, bounds); collisionObjects.push(wall2); scene.add(wall2);
             const wall3 = new THREE.Mesh(new THREE.BoxGeometry(BORDER_COLLISION_SIZE, VISIBLE_WALL_HEIGHT, MAP_SIZE * 2), material); wall3.position.set(-bounds, VISIBLE_WALL_HEIGHT/2, 0); collisionObjects.push(wall3); scene.add(wall3);
             const wall4 = new THREE.Mesh(new THREE.BoxGeometry(BORDER_COLLISION_SIZE, VISIBLE_WALL_HEIGHT, MAP_SIZE * 2), material); wall4.position.set(bounds, VISIBLE_WALL_HEIGHT/2, 0); collisionObjects.push(wall4); scene.add(wall4);
         }
         
-        // Улучшенная функция респауна
         function respawnNPCs() {
             const currentCivs = npcs.filter(n => !n.userData.isPolice).length;
             const currentPolice = npcs.filter(n => n.userData.isPolice).length;
@@ -781,7 +845,6 @@
             if (missingCivs > 0) {
                 spawnNPCs(missingCivs, false);
             }
-            // Гарантируем, что всегда будет нужное количество полиции
             if (missingPolice > 0) {
                 spawnNPCs(missingPolice, true);
             }
@@ -871,7 +934,6 @@
             }
         }
         
-        // Обновленная функция spawnNPCs с флагом isPolice
         function spawnNPCs(count, isPolice) {
             for(let i=0; i<count; i++) {
                 const group = new THREE.Group();
@@ -912,7 +974,6 @@
             npcs.splice(npcs.indexOf(npc), 1); 
             npcs.forEach(n => { if(!n.userData.isPolice) n.userData.state = 'PANIC'; }); 
             document.getElementById('wantedLevel').innerText = "★ РОЗЫСК: " + wantedLevel; 
-            // Респаун будет произведен через setInterval(respawnNPCs, ...)
         }
         function createBlood(pos) { for(let k=0; k<8; k++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color:0x880000})); m.position.copy(pos); m.position.x+=(Math.random()-0.5); m.position.z+=(Math.random()-0.5); m.position.y=0.1; scene.add(m); particles.push({mesh:m, life:100}); } }
         function updateParticles() { for(let i=particles.length-1; i>=0; i--) { particles[i].life--; if(particles[i].life<=0) { scene.remove(particles[i].mesh); particles.splice(i,1); } } }
@@ -956,10 +1017,18 @@
             } 
         }
 
+        // --- ОБНОВЛЕННЫЙ ENDGAME ---
         function endGame() { 
             isGameActive = false; 
             document.exitPointerLock(); 
-            document.getElementById('bustedScreen').style.display = 'flex'; 
+            const bustedScreen = document.getElementById('bustedScreen');
+            
+            // Кастомный текст смерти
+            bustedScreen.querySelector('h1').innerText = "💀 ТЫ УМЕР 💀"; 
+            bustedScreen.querySelector('h2').innerText = "А Я ГОВОРИЛ ТЕБЕ ЭХ ЛЁХА.";
+            bustedScreen.querySelector('button').innerText = "НАЧАТЬ СНОВА";
+            
+            bustedScreen.style.display = 'flex'; 
         }
 
         document.getElementById('startBtn').addEventListener('click', () => { 
