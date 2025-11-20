@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA ЛЁХА (V12.9 - ФИНАЛЬНЫЙ РЕЛИЗ С МЕМАМИ)</title>
+    <title>GTA ЛЁХА (V12.0 - ФИНАЛЬНЫЙ РЕЛИЗ С МЕМАМИ)</title>
     <style>
         body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; user-select: none; background: #000; }
         canvas { display: block; width: 100vw; height: 100vh; }
@@ -168,7 +168,7 @@
         <div id="hpDisplay" style="color: red; margin-top: 5px;">❤️ ЗДОРОВЬЕ: 100</div>
         <div id="weaponDisplay" style="color: orange; margin-top: 5px;">👊 КУЛАКИ</div>
         <div id="wantedLevel" style="color: white; margin-top: 5px;">★ РОЗЫСК: 0</div>
-        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.9 (ФИНАЛЬНЫЙ РЕЛИЗ С МЕМАМИ)</div>
+        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.0 (ФИНАЛЬНЫЙ РЕЛИЗ С МЕМАМИ)</div>
     </div>
     
     <div id="miniMap">
@@ -225,9 +225,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.9) ===
+        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.0) ===
         const CAMERA_HEIGHT = 1.5;
-        const NPC_COUNT = 500; 
+        const NPC_COUNT = 500; // УВЕЛИЧЕНО ПО ЗАПРОСУ
         const TRAFFIC_CAR_COUNT = 50; 
         const RESPAWN_INTERVAL = 90 * 1000; 
         const MAP_SIZE = 400; 
@@ -260,7 +260,7 @@
         let gameTime = 10;
         let carSpeed = 0;
         
-        // --- НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ РОЗЫСКА (С ТАЙМЕРОМ) ---
+        // --- НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ РОЗЫСКА ---
         const WANTED_RESET_TIME = 30000; // 30 секунд
         let wantedTimeout;
         // ---------------------------------------
@@ -596,14 +596,13 @@
                 const offset = new THREE.Vector3(0, 5, 10); offset.applyMatrix4(currentCar.matrixWorld);
                 camera.position.lerp(offset, 0.1); camera.lookAt(currentCar.position);
 
-                // --- ЛОГИКА: Обработка "Границы" для машины (Поездка за границу) ---
-                const MAP_BOUNDARY = MAP_SIZE;
-                if (Math.abs(currentCar.position.x) > MAP_BOUNDARY || Math.abs(currentCar.position.z) > MAP_BOUNDARY) {
+                // --- НОВАЯ ЛОГИКА: Обработка "Границы" для машины ---
+                if (Math.abs(currentCar.position.x) > MAP_SIZE || Math.abs(currentCar.position.z) > MAP_SIZE) {
                     console.log("🚗 Вы достигли границы карты! Поездка за границу невозможна. (Как вы и просили, ничего не происходит, кроме остановки!)");
                     
                     // Жесткое ограничение позиции
-                    currentCar.position.x = Math.max(-MAP_BOUNDARY, Math.min(MAP_BOUNDARY, currentCar.position.x));
-                    currentCar.position.z = Math.max(-MAP_BOUNDARY, Math.min(MAP_BOUNDARY, currentCar.position.z));
+                    currentCar.position.x = Math.max(-MAP_SIZE, Math.min(MAP_SIZE, currentCar.position.x));
+                    currentCar.position.z = Math.max(-MAP_SIZE, Math.min(MAP_SIZE, currentCar.position.z));
                     carSpeed = 0; // Сброс скорости при ударе о невидимую стену
                 }
 
@@ -611,7 +610,7 @@
                 // Движение пешехода
                 movePlayer(dt);
                 
-                // --- ЛОГИКА: Обработка "Границы" для пешехода ---
+                // --- НОВАЯ ЛОГИКА: Обработка "Границы" для пешехода ---
                 if (Math.abs(player.position.x) > MAP_SIZE || Math.abs(player.position.z) > MAP_SIZE) {
                      console.log("🚶 Вы достигли границы карты! Выход за пределы невозможен.");
                      player.position.x = Math.max(-MAP_SIZE, Math.min(MAP_SIZE, player.position.x));
