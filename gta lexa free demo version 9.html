@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA ЛЁХА (V12.8 - ФИНАЛЬНЫЙ FIX)</title>
+    <title>GTA ЛЁХА (V12.10 - УРОН ЗА ГРАНИЦЕЙ НА МАШИНЕ)</title>
     <style>
         /* --- СТИЛИ --- */
         body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; user-select: none; background: #000; }
@@ -201,7 +201,7 @@
         <div id="hpDisplay" style="color: red; margin-top: 5px;">❤️ ЗДОРОВЬЕ: 100</div>
         <div id="weaponDisplay" style="color: orange; margin-top: 5px;">👊 КУЛАКИ</div>
         <div id="wantedLevel" style="color: white; margin-top: 5px;">★ РОЗЫСК: 0</div>
-        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.8 (ФИНАЛЬНЫЙ FIX)</div>
+        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.10 (УРОН ЗА ГРАНИЦЕЙ)</div>
     </div>
     
     <div id="miniMap">
@@ -237,12 +237,15 @@
             <li>**Мышь:** Обзор/Поворот камеры</li>
             <li>**ЛКМ (Левая кнопка мыши):** Удар / Выстрел</li>
             <li>**F:** Сесть в машину / Выйти из машины</li>
+            <li>**ПРОБЕЛ (Space):** **Прыжок**</li>
             <li>**1:** Выбрать **Кулаки** 👊</li>
             <li>**2:** Выбрать **Пистолет** 🔫</li>
         </ul>
 
         <h4>🚨 Розыск и Полиция</h4>
-        <p>Каждое убийство (пешехода или полицейского) повышает уровень розыска (★). Полиция теперь стреляет издалека, а в машине будет вас **преследовать и обстреливать**! Полицейских стало больше — будь осторожен!</p>
+        <p>Каждое убийство (пешехода или полицейского) повышает уровень розыска (★). Полиция теперь стреляет издалека, а в машине будет вас **преследовать и обстреливать**!</p>
+        <p>Розыск спадает через **15 секунд**, если поблизости нет полиции.</p>
+        <p><strong>НОВИНКА:</strong> Попытка выехать или выйти за границы города наносит урон **12 HP в секунду**!</p>
 
         <button onclick="document.getElementById('infoBox').style.display='none'">ЗАКРЫТЬ</button>
     </div>
@@ -256,7 +259,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.8) ===
+        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.10) ===
         const CAMERA_HEIGHT = 1.5;
         const NPC_COUNT = 200;       
         const POLICE_COUNT = 20;     
@@ -270,8 +273,10 @@
         const MINIMAP_SCALE = 0.8; 
         const MAP_VIEW_RADIUS = MINIMAP_SIZE_PX / MINIMAP_SCALE / 2; 
         const BOUNDARY_RANGE = 50; 
-        const BOUNDARY_DAMAGE_AREA = MAP_SIZE - BOUNDARY_RANGE;
-        
+        const BOUNDARY_DAMAGE_AREA = MAP_SIZE - BOUNDARY_RANGE; // Граница нанесения урона
+        const WANTED_DECAY_TIME = 15; // Секунд на понижение 1 уровня розыска
+        const BOUNDARY_DAMAGE_DPS = 12; // Урон за секунду за границей (10-15 HP по запросу)
+
         // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
         let scene, camera, renderer;
         let player, weaponGroup;
@@ -293,6 +298,7 @@
         let currentWeapon = 'FIST';
         let gameTime = 10;
         let carSpeed = 0;
+        let wantedDecayTimer = 0; 
         
         const carRaycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(), 0, 10);
         
@@ -309,6 +315,7 @@
             player = new THREE.Group();
             player.add(camera);
             player.position.set(0, CAMERA_HEIGHT, 0); 
+            player.userData = { canJump: true, velocityY: 0 }; 
             scene.add(player);
 
             createWeapons();
@@ -318,6 +325,14 @@
             const sunLight = new THREE.DirectionalLight(0xffeebb, 0.9);
             sunLight.position.set(50, 150, 100);
             sunLight.castShadow = true;
+            sunLight.shadow.mapSize.width = 1024;
+            sunLight.shadow.mapSize.height = 1024;
+            sunLight.shadow.camera.near = 1;
+            sunLight.shadow.camera.far = 300;
+            sunLight.shadow.camera.left = -300;
+            sunLight.shadow.camera.right = 300;
+            sunLight.shadow.camera.top = 300;
+            sunLight.shadow.camera.bottom = -300;
             scene.add(sunLight);
 
             createCity();
@@ -340,15 +355,13 @@
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
             
-            // --- ГАРАНТИЯ ДОБАВЛЕНИЯ CANVAS В DOM (ИСПРАВЛЕНИЕ ЧЕРНОГО ЭКРАНА) ---
             const canvasElement = renderer.domElement;
-            // Убеждаемся, что канвас находится в теле документа и он единственный
             if (document.body.contains(canvasElement)) {
                  document.body.removeChild(canvasElement);
             }
             document.body.appendChild(canvasElement);
-            // ---------------------------------------------------------------------
 
             raycaster = new THREE.Raycaster();
             
@@ -364,87 +377,59 @@
 
             animate();
         }
-
-        function spawnParkingLotCars() {
-            const spawnCars = [
-                { color: 0xff0000, isPolice: false, x: -10, z: 0 },
-                { color: 0x00FF00, isPolice: false, x: -15, z: 0 },
-                { color: 0, isPolice: true, x: -20, z: 0 }
-            ];
-
-            spawnCars.forEach(sc => {
-                const car = createCarMesh(sc.color, sc.isPolice);
-                car.position.set(sc.x, 0, sc.z);
-                car.rotation.y = Math.PI / 2;
-                car.castShadow = true;
-                cars.push(car);
-                scene.add(car);
-                collisionObjects.push(car.children[0]);
-            });
-        }
-
-
-        function createEasterEggPullUp(x, z, rotY) {
-            const group = new THREE.Group();
-            const bodyColor = (x > 0) ? 0xcc0000 : 0x0000cc; 
-            const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.5, 0.3), new THREE.MeshStandardMaterial({color: bodyColor})); 
-            body.position.y = 0.75;
-            const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), new THREE.MeshStandardMaterial({color: 0xffe0bd})); 
-            head.position.y = 1.6;
-            
-            const armGeo = new THREE.BoxGeometry(0.8, 0.15, 0.15); 
-            const armMat = new THREE.MeshStandardMaterial({color: 0xffe0bd});
-            
-            const arms = new THREE.Mesh(armGeo, armMat);
-            arms.position.set(0, 1.85, -0.2); 
-            group.add(arms);
-
-            group.add(body, head);
-            
-            group.position.set(x, 0, z); 
-            group.rotation.y = rotY; 
-            group.castShadow = true;
-            group.name = "EasterEggNPC"; 
-
-            scene.add(group);
-        }
-
-        function createBench(x, y, z, rotY) {
-            const plank = new THREE.Mesh(new THREE.BoxGeometry(3, 0.2, 0.8), new THREE.MeshStandardMaterial({color: 0x8b4513})); 
-            plank.position.y = 0.8;
-            
-            const legGeo = new THREE.BoxGeometry(0.2, 0.8, 0.2); 
-            const legMat = new THREE.MeshStandardMaterial({color: 0x5c4033});
-
-            const l1 = new THREE.Mesh(legGeo, legMat); l1.position.set( 1.3, 0.4,  0.3);
-            const l2 = new THREE.Mesh(legGeo, legMat); l2.position.set(-1.3, 0.4,  0.3);
-            const l3 = new THREE.Mesh(legGeo, legMat); l3.position.set( 1.3, 0.4, -0.3); 
-            const l4 = new THREE.Mesh(legGeo, legMat); l4.position.set(-1.3, 0.4, -0.3); 
-            
-            const benchGroup = new THREE.Group(); 
-            benchGroup.add(plank, l1, l2, l3, l4); 
-            
-            benchGroup.position.set(x, y, z); 
-            benchGroup.rotation.y = rotY; 
-            benchGroup.castShadow = true; 
-            scene.add(benchGroup);
-            
-            collisionObjects.push(plank); 
-            collisionObjects.push(l1); 
-            collisionObjects.push(l2);
-            collisionObjects.push(l3); 
-            collisionObjects.push(l4);
+        
+        function updateWantedLevelDisplay() {
+            const levelText = '★'.repeat(wantedLevel);
+            document.getElementById('wantedLevel').innerText = `★ РОЗЫСК: ${wantedLevel} ${levelText}`;
         }
         
-        // --- ДВИЖЕНИЕ ПЕШЕХОДА (ОБНОВЛЕНА КОЛЛИЗИЯ И УРОН) ---
+        // --- НОВАЯ ФУНКЦИЯ: ПРОВЕРКА ГРАНИЦ И УРОН ---
+        function checkBoundaryDamage(position, dt) {
+            const boundaryWarning = document.getElementById('boundaryWarning');
+            // Проверяем, находится ли позиция за границей урона
+            const isOutOfBounds = Math.abs(position.x) > BOUNDARY_DAMAGE_AREA || Math.abs(position.z) > BOUNDARY_DAMAGE_AREA;
+
+            if (isOutOfBounds) {
+                boundaryWarning.style.display = 'flex';
+                boundaryWarning.innerText = "🛑 ЛЁХА ДУРАЧОК НЕ ЛЕЗЬ ТУДА (СВОБОДА НЕ НАШЕ МЕСТО)";
+
+                // Урон 12 HP в секунду
+                const damage = BOUNDARY_DAMAGE_DPS * dt; 
+                playerHP -= damage;
+                    
+                if (playerHP <= 0) {
+                    endGame();
+                }
+                
+                document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${Math.max(0, Math.floor(playerHP))}`;
+                return true; // Был за границей
+            } else {
+                boundaryWarning.style.display = 'none';
+                return false; // Был в границах
+            }
+        }
+        // ---------------------------------------------
+        
         function movePlayer(dt) {
             const speed = 8; const dir = new THREE.Vector3();
             if (moveFwd) dir.z -= 1; if (moveBwd) dir.z += 1; if (moveLft) dir.x -= 1; if (moveRgt) dir.x += 1;
             dir.normalize().multiplyScalar(speed * dt);
             
             const moveVector = dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotation.y);
-            const newPos = player.position.clone().add(moveVector);
-            newPos.y = 0;
+            
+            player.userData.velocityY -= 9.8 * dt * 2; 
+            player.position.y += player.userData.velocityY * dt;
+            
+            if (player.position.y < CAMERA_HEIGHT) {
+                player.position.y = CAMERA_HEIGHT;
+                player.userData.canJump = true;
+                player.userData.velocityY = 0;
+            }
+            
+            const newPos = player.position.clone();
+            newPos.x += moveVector.x;
+            newPos.z += moveVector.z;
+            newPos.y = CAMERA_HEIGHT; 
 
             let collided = false;
 
@@ -457,7 +442,6 @@
                 let isBuilding = obj.geometry.type === 'BoxGeometry' && obj.geometry.parameters.width > 10;
 
                 if (isBuilding) { 
-                    // КОЛЛИЗИЯ СО ЗДАНИЯМИ (AABB-подобная)
                     const w = obj.geometry.parameters.width / 2;
                     const d = obj.geometry.parameters.depth / 2;
                     const cushion = PLAYER_COLLISION_RADIUS;
@@ -466,7 +450,6 @@
                         newPos.x > oPos.x - w - cushion && newPos.x < oPos.x + w + cushion &&
                         newPos.z > oPos.z - d - cushion && newPos.z < oPos.z + d + cushion
                     ) {
-                        // Рассчитываем, куда меньше всего нужно толкать, чтобы выйти из коллизии
                         const overlapX = Math.min(newPos.x - (oPos.x - w), (oPos.x + w) - newPos.x);
                         const overlapZ = Math.min(newPos.z - (oPos.z - d), (oPos.z + d) - newPos.z);
                         
@@ -479,15 +462,16 @@
                             push.z = dirZ * (cushion - overlapZ);
                         }
 
-                        player.position.add(push); 
+                        player.position.x += push.x;
+                        player.position.z += push.z;
                         dir.set(0, 0, 0); 
                         collided = true;
                         break;
                     }
                 } else if (newPos.distanceTo(oPos) < PLAYER_COLLISION_RADIUS) { 
-                    // КОЛЛИЗИЯ С МЕЛКИМИ ОБЪЕКТАМИ (машины, скамейки, деревья)
                     const push = newPos.clone().sub(oPos).normalize().multiplyScalar(PLAYER_COLLISION_RADIUS - newPos.distanceTo(oPos)); 
-                    player.position.add(push);
+                    player.position.x += push.x;
+                    player.position.z += push.z;
                     dir.set(0, 0, 0); 
                     collided = true;
                     break;
@@ -498,40 +482,17 @@
                 player.translateX(dir.x); 
                 player.translateZ(dir.z); 
             }
-            player.position.y = CAMERA_HEIGHT;
-
-            // --- ЛОГИКА УРОНА ЗА ГРАНИЦЕЙ ---
-            const boundaryWarning = document.getElementById('boundaryWarning');
-            let isOutOfBounds = Math.abs(player.position.x) > BOUNDARY_DAMAGE_AREA || Math.abs(player.position.z) > BOUNDARY_DAMAGE_AREA;
             
-            if (isOutOfBounds) {
-                 boundaryWarning.style.display = 'flex';
-                 boundaryWarning.innerText = "🛑 ЛЁХА ДУРАЧОК НЕ ЛЕЗЬ ТУДА (СВОБОДА НЕ НАШЕ МЕСТО)";
-                 
-                 if (moveFwd || moveBwd || moveLft || moveRgt) {
-                     // Проверка, что игрок двигается дальше, а не к центру
-                     const movingOutX = Math.abs(player.position.x) > BOUNDARY_DAMAGE_AREA && Math.sign(player.position.x) === Math.sign(moveVector.x);
-                     const movingOutZ = Math.abs(player.position.z) > BOUNDARY_DAMAGE_AREA && Math.sign(player.position.z) === Math.sign(moveVector.z);
-                      
-                     if (movingOutX || movingOutZ) {
-                         // Урон 30-35 в секунду (умножаем на 2, чтобы быстрее)
-                         const damagePerSecond = Math.floor(Math.random() * 6) + 30; 
-                         playerHP -= damagePerSecond * dt * 2; 
-                          
-                         if (playerHP <= 0) { endGame(); }
-                         document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${Math.max(0, Math.floor(playerHP))}`;
-                     }
-                 }
-            } else {
-                 boundaryWarning.style.display = 'none';
-            }
+            // --- ЛОГИКА УРОНА ЗА ГРАНИЦЕЙ (ПЕШКОМ) ---
+            checkBoundaryDamage(player.position, dt);
+            // ---------------------------------------
 
             let nearCar = false; cars.forEach(c => { if(player.position.distanceTo(c.position) < 5) nearCar = true; });
             document.getElementById('carHint').style.display = nearCar ? 'block' : 'none';
-            if (moveFwd||moveBwd||moveLft||moveRgt) weaponGroup.position.y = -0.4 + Math.sin(performance.now()*0.015)*0.02;
+            if ((moveFwd||moveBwd||moveLft||moveRgt) && player.userData.canJump) weaponGroup.position.y = -0.4 + Math.sin(performance.now()*0.015)*0.02;
         }
 
-        // === ГЛОБАЛЬНАЯ ФУНКЦИЯ ВЫСТРЕЛА NPC (Урон увеличен и проверен) ---
+        // === ГЛОБАЛЬНАЯ ФУНКЦИЯ ВЫСТРЕЛА NPC ===
         function npcShoot(npc) {
             if (npc.userData.lastShot && performance.now() - npc.userData.lastShot < 1000) return; 
             if (currentCar) return; 
@@ -542,7 +503,6 @@
             const targetPos = player.position; 
             const direction = new THREE.Vector3().subVectors(targetPos, npc.position).normalize();
             
-            // Задаем луч от NPC в сторону игрока
             raycaster.set(new THREE.Vector3(npc.position.x, 1.5, npc.position.z), direction);
             
             const intersectables = collisionObjects.concat(npcs).filter(o => o !== npc);
@@ -551,7 +511,6 @@
             if (hits.length > 0) {
                 const hit = hits[0];
                 
-                // Проверяем, попал ли луч в игрока или в его камеру
                 let hitPlayer = false;
                 let obj = hit.object;
                 while (obj.parent) {
@@ -574,7 +533,7 @@
             }
         }
         
-        // === АТАКА ПОЛИЦЕЙСКОЙ МАШИНЫ (Урон увеличен и проверен) ===
+        // === АТАКА ПОЛИЦЕЙСКОЙ МАШИНЫ ===
         function policeCarAttack(pCar, tCar) {
             const distance = pCar.position.distanceTo(tCar.position);
             const attackRange = 75; 
@@ -710,8 +669,12 @@
                 const offset = new THREE.Vector3(0, 5, 10); offset.applyMatrix4(currentCar.matrixWorld);
                 camera.position.lerp(offset, 0.1); camera.lookAt(currentCar.position);
 
+                // --- НОВАЯ ЛОГИКА УРОНА ЗА ГРАНИЦЕЙ (НА МАШИНЕ) ---
+                checkBoundaryDamage(currentCar.position, dt);
+                // -----------------------------------------------
+
             } else {
-                // Движение пешехода
+                // Движение пешехода, которое вызывает movePlayer(dt)
                 movePlayer(dt);
             }
 
@@ -821,12 +784,48 @@
                     }
                 }
             });
+
+            // --- ЛОГИКА ТАЙМЕРА РОЗЫСКА ---
+            if (wantedLevel > 0) {
+                let isPolicePursuing = policeCar && currentCar;
+                
+                if (!isPolicePursuing) {
+                    const targetPos = currentCar ? currentCar.position : player.position;
+                    const pursuingNPCs = npcs.filter(n => 
+                        n.userData.isPolice && 
+                        n.position.distanceTo(targetPos) < 50 
+                    );
+                    isPolicePursuing = pursuingNPCs.length > 0;
+                }
+
+                if (isPolicePursuing) {
+                    wantedDecayTimer = 0;
+                } else {
+                    wantedDecayTimer += dt;
+                    
+                    if (wantedDecayTimer >= WANTED_DECAY_TIME) {
+                        wantedLevel = Math.max(0, wantedLevel - 1);
+                        wantedDecayTimer = 0;
+                        updateWantedLevelDisplay();
+                        
+                        if (wantedLevel === 0) {
+                             npcs.forEach(n => { if(n.userData.state === 'PANIC') n.userData.state = 'WALK'; });
+                             if (policeCar) {
+                                policeCar.userData.isBeingUsedByPolice = false;
+                                policeCar = null;
+                             }
+                        }
+                    }
+                }
+            } else {
+                wantedDecayTimer = 0;
+            }
             
             updateMiniMap(); 
             updateParticles(); renderer.render(scene, camera);
         }
 
-        // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
+        // --- ОСТАЛЬНЫЕ ФУНКЦИИ (Не изменены, но необходимы для работы) ---
         function createMapBounds() {
             const bounds = MAP_SIZE + BORDER_COLLISION_SIZE / 2;
             const material = new THREE.MeshStandardMaterial({ 
@@ -836,7 +835,6 @@
                 roughness: 0.9, 
                 metalness: 0.1 
             }); 
-            // Это невидимые коллизионные стены, чтобы NPC не выходили за границу.
             const wall1 = new THREE.Mesh(new THREE.BoxGeometry(MAP_SIZE * 2 + BORDER_COLLISION_SIZE * 2, VISIBLE_WALL_HEIGHT, BORDER_COLLISION_SIZE), material); wall1.position.set(0, VISIBLE_WALL_HEIGHT/2, -bounds); collisionObjects.push(wall1); scene.add(wall1);
             const wall2 = new THREE.Mesh(new THREE.BoxGeometry(MAP_SIZE * 2 + BORDER_COLLISION_SIZE * 2, VISIBLE_WALL_HEIGHT, BORDER_COLLISION_SIZE), material); wall2.position.set(0, VISIBLE_WALL_HEIGHT/2, bounds); collisionObjects.push(wall2); scene.add(wall2);
             const wall3 = new THREE.Mesh(new THREE.BoxGeometry(BORDER_COLLISION_SIZE, VISIBLE_WALL_HEIGHT, MAP_SIZE * 2), material); wall3.position.set(-bounds, VISIBLE_WALL_HEIGHT/2, 0); collisionObjects.push(wall3); scene.add(wall3);
@@ -870,7 +868,7 @@
                 for(let z = -MAP_SIZE; z <= MAP_SIZE; z+=blockSize) {
                     if (x > -30 && x < 30 && z > -30 && z < 40) continue; 
                     if (Math.abs(x) < MAP_SIZE && Math.abs(z) < MAP_SIZE && (x % 100 === 0 || z % 100 === 0)) {
-                            const roadPatch = new THREE.Mesh(new THREE.PlaneGeometry(blockSize, blockSize), new THREE.MeshStandardMaterial({ color: 0x333333 })); roadPatch.rotation.x = -Math.PI/2; roadPatch.position.set(x, 0.01, z); scene.add(roadPatch);
+                            const roadPatch = new THREE.Mesh(new THREE.PlaneGeometry(blockSize, blockSize), new THREE.MeshStandardMaterial({ color: 0x333333 })); roadPatch.rotation.x = -Math.PI/2; roadPatch.position.set(x, 0.01, z); roadPatch.receiveShadow = true; scene.add(roadPatch);
                     }
                     if (Math.abs(x) < MAP_SIZE - 50 && Math.abs(z) < MAP_SIZE - 50 && Math.abs(x) % 100 !== 0 && Math.abs(z) % 100 !== 0) {
                         const h = Math.random() * 25 + 10; const w = blockSize - 15;
@@ -894,13 +892,13 @@
         }
         function createTree(x, z) {
             const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.6, 3), new THREE.MeshStandardMaterial({color:0x5c4033})); trunk.position.set(x, 1.5, z); trunk.castShadow = true; scene.add(trunk); collisionObjects.push(trunk);
-            const leaves = new THREE.Mesh(new THREE.DodecahedronGeometry(2.5), new THREE.MeshStandardMaterial({color:0x228b22})); leaves.position.set(x, 4, z); scene.add(leaves);
+            const leaves = new THREE.Mesh(new THREE.DodecahedronGeometry(2.5), new THREE.MeshStandardMaterial({color:0x228b22})); leaves.position.set(x, 4, z); leaves.castShadow = true; scene.add(leaves);
         }
         function createCarMesh(color, isPolice) {
             const group = new THREE.Group();
             const bodyColor = isPolice ? 0x0000FF : color; 
-            const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 4.6), new THREE.MeshStandardMaterial({color: bodyColor})); body.position.y = 0.6; group.add(body);
-            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.6, 2.5), new THREE.MeshStandardMaterial({color: 0x111111})); cabin.position.set(0, 1.2, -0.1); group.add(cabin);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 4.6), new THREE.MeshStandardMaterial({color: bodyColor})); body.position.y = 0.6; body.castShadow = true; group.add(body);
+            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.6, 2.5), new THREE.MeshStandardMaterial({color: 0x111111})); cabin.position.set(0, 1.2, -0.1); cabin.castShadow = true; group.add(cabin);
             const wMat = new THREE.MeshStandardMaterial({color: 0x000000});
             const wGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.4, 16); wGeo.rotateZ(Math.PI/2);
             [[1.1,1.5],[-1.1,1.5],[1.1,-1.5],[-1.1,-1.5]].forEach(p=>{
@@ -920,6 +918,24 @@
             let x = (Math.random()-0.5) * MAP_SIZE * 2 * 0.9; 
             let z = (Math.random()-0.5) * MAP_SIZE * 2 * 0.9;
             return {x, z};
+        }
+        
+        function spawnParkingLotCars() {
+            const spawnCars = [
+                { color: 0xff0000, isPolice: false, x: -10, z: 0 },
+                { color: 0x00FF00, isPolice: false, x: -15, z: 0 },
+                { color: 0, isPolice: true, x: -20, z: 0 }
+            ];
+
+            spawnCars.forEach(sc => {
+                const car = createCarMesh(sc.color, sc.isPolice);
+                car.position.set(sc.x, 0, sc.z);
+                car.rotation.y = Math.PI / 2;
+                car.castShadow = true;
+                cars.push(car);
+                scene.add(car);
+                collisionObjects.push(car.children[0]);
+            });
         }
         
         function spawnTraffic() {
@@ -946,8 +962,8 @@
             for(let i=0; i<count; i++) {
                 const group = new THREE.Group();
                 const bodyColor = isPolice ? 0x000088 : Math.random()*0xffffff;
-                const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.5, 0.3), new THREE.MeshStandardMaterial({color: bodyColor})); body.position.y = 0.75;
-                const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), new THREE.MeshStandardMaterial({color: 0xffe0bd})); head.position.y = 1.6;
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.5, 0.3), new THREE.MeshStandardMaterial({color: bodyColor})); body.position.y = 0.75; body.castShadow = true;
+                const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), new THREE.MeshStandardMaterial({color: 0xffe0bd})); head.position.y = 1.6; head.castShadow = true;
                 group.add(body); group.add(head);
                 const {x, z} = getRandomMapPosition();
                 group.position.set(x, 0, z); group.castShadow = true;
@@ -958,12 +974,31 @@
         
         function tryEnterCar() {
             if (currentCar) {
-                player.position.copy(currentCar.position); player.position.x -= 3; player.position.y = CAMERA_HEIGHT; player.visible = true; player.add(camera); camera.position.set(0,0,0); camera.rotation.set(0,0,0); currentCar = null; document.getElementById('crosshair').style.display = 'block'; document.getElementById('weaponDisplay').style.display = 'block'; weaponGroup.visible = true;
+                player.position.copy(currentCar.position); 
+                player.position.x -= 3; 
+                player.position.y = CAMERA_HEIGHT; 
+                player.userData.canJump = true; 
+                player.userData.velocityY = 0;
+                player.visible = true; 
+                player.add(camera); 
+                camera.position.set(0,0,0); 
+                camera.rotation.set(0,0,0); 
+                currentCar = null; 
+                document.getElementById('crosshair').style.display = 'block'; 
+                document.getElementById('weaponDisplay').style.display = 'block'; 
+                weaponGroup.visible = true;
             } else {
                 let closest = null; let minD = 5;
                 cars.forEach(c => { const d = player.position.distanceTo(c.position); if(d<minD){ minD=d; closest=c; }});
                 if (closest && !closest.userData.isBeingUsedByPolice) { 
-                    currentCar = closest; player.visible = false; scene.add(camera); document.getElementById('crosshair').style.display = 'none'; document.getElementById('weaponDisplay').style.display = 'none'; document.getElementById('carHint').style.display = 'none'; weaponGroup.visible = false; carSpeed = 0;
+                    currentCar = closest; 
+                    player.visible = false; 
+                    scene.add(camera); 
+                    document.getElementById('crosshair').style.display = 'none'; 
+                    document.getElementById('weaponDisplay').style.display = 'none'; 
+                    document.getElementById('carHint').style.display = 'none'; 
+                    weaponGroup.visible = false; 
+                    carSpeed = 0;
                 }
             }
         }
@@ -978,16 +1013,39 @@
                  wantedLevel = Math.min(wantedLevel + 1, 5);
             }
             
+            wantedDecayTimer = 0; 
+            updateWantedLevelDisplay();
+
             scene.remove(npc); 
             npcs.splice(npcs.indexOf(npc), 1); 
             npcs.forEach(n => { if(!n.userData.isPolice) n.userData.state = 'PANIC'; }); 
-            document.getElementById('wantedLevel').innerText = "★ РОЗЫСК: " + wantedLevel; 
         }
         function createBlood(pos) { for(let k=0; k<8; k++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color:0x880000})); m.position.copy(pos); m.position.x+=(Math.random()-0.5); m.position.z+=(Math.random()-0.5); m.position.y=0.1; scene.add(m); particles.push({mesh:m, life:100}); } }
         function updateParticles() { for(let i=particles.length-1; i>=0; i--) { particles[i].life--; if(particles[i].life<=0) { scene.remove(particles[i].mesh); particles.splice(i,1); } } }
         function createWeapons() { weaponGroup = new THREE.Group(); camera.add(weaponGroup); weaponGroup.position.set(0.3, -0.4, -0.5); const fist = new THREE.Mesh(new THREE.SphereGeometry(0.15), new THREE.MeshStandardMaterial({color: 0xffccaa})); fist.name = 'FIST'; weaponGroup.add(fist); const gun = new THREE.Group(); gun.visible = false; gun.name = 'PISTOL'; gun.add(new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.4), new THREE.MeshStandardMaterial({color:0x111111}))); weaponGroup.add(gun); }
-        function onKeyDown(e) { if(e.code==='KeyW') moveFwd=true; if(e.code==='KeyS') moveBwd=true; if(e.code==='KeyA') moveLft=true; if(e.code==='KeyD') moveRgt=true; if(e.code==='KeyF') tryEnterCar(); if(e.code==='Digit1'&&!currentCar) { currentWeapon='FIST'; weaponGroup.children[0].visible=true; weaponGroup.children[1].visible=false; document.getElementById('weaponDisplay').innerText='👊 КУЛАКИ'; } if(e.code==='Digit2'&&!currentCar) { currentWeapon='PISTOL'; weaponGroup.children[0].visible=false; weaponGroup.children[1].visible=true; document.getElementById('weaponDisplay').innerText='🔫 ПИСТОЛЕТ'; } }
-        function onKeyUp(e) { if(e.code==='KeyW') moveFwd=false; if(e.code==='KeyS') moveBwd=false; if(e.code==='KeyA') moveLft=false; if(e.code==='KeyD') moveRgt=false; }
+        
+        function onKeyDown(e) { 
+            if(e.code==='KeyW') moveFwd=true; 
+            if(e.code==='KeyS') moveBwd=true; 
+            if(e.code==='KeyA') moveLft=true; 
+            if(e.code==='KeyD') moveRgt=true; 
+            if(e.code==='KeyF') tryEnterCar(); 
+            
+            if (e.code === 'Space' && player.userData.canJump && !currentCar) { 
+                player.userData.velocityY = 10; 
+                player.userData.canJump = false; 
+            }
+            
+            if(e.code==='Digit1'&&!currentCar) { currentWeapon='FIST'; weaponGroup.children[0].visible=true; weaponGroup.children[1].visible=false; document.getElementById('weaponDisplay').innerText='👊 КУЛАКИ'; } 
+            if(e.code==='Digit2'&&!currentCar) { currentWeapon='PISTOL'; weaponGroup.children[0].visible=false; weaponGroup.children[1].visible=true; document.getElementById('weaponDisplay').innerText='🔫 ПИСТОЛЕТ'; } 
+        }
+
+        function onKeyUp(e) { 
+            if(e.code==='KeyW') moveFwd=false; 
+            if(e.code==='KeyS') moveBwd=false; 
+            if(e.code==='KeyA') moveLft=false; 
+            if(e.code==='KeyD') moveRgt=false; 
+        }
         function onMouseMove(e) { if(currentCar||document.pointerLockElement!==document.body) return; player.rotation.y -= e.movementX*0.002; camera.rotation.x -= e.movementY*0.002; camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x)); }
         
         function onMouseDown() { 
@@ -1019,19 +1077,18 @@
                     else { 
                         npcs.forEach(n => { if(!n.userData.isPolice) n.userData.state = 'PANIC'; });
                         wantedLevel = Math.min(wantedLevel+1, 5); 
-                        document.getElementById('wantedLevel').innerText = "★ РОЗЫСК: " + wantedLevel; 
+                        wantedDecayTimer = 0; 
+                        updateWantedLevelDisplay(); 
                     } 
                 } 
             } 
         }
 
-        // --- ОБНОВЛЕННЫЙ ENDGAME ---
         function endGame() { 
             isGameActive = false; 
             document.exitPointerLock(); 
             const bustedScreen = document.getElementById('bustedScreen');
             
-            // Кастомный текст смерти
             bustedScreen.querySelector('h1').innerText = "💀 ТЫ УМЕР 💀"; 
             bustedScreen.querySelector('h2').innerText = "А Я ГОВОРИЛ ТЕБЕ ЭХ ЛЁХА.";
             bustedScreen.querySelector('button').innerText = "НАЧАТЬ СНОВА";
@@ -1045,13 +1102,13 @@
             isGameActive = true; 
             document.body.requestPointerLock(); 
             document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${playerHP}`;
+            updateWantedLevelDisplay();
         });
 
         document.getElementById('help-btn').addEventListener('click', () => {
              document.getElementById('infoBox').style.display = 'block';
         });
         
-        // --- ЗВУКИ (Заглушки) ---
         function playSound(name) {
              const osc = audioCtx.createOscillator();
              const gain = audioCtx.createGain();
