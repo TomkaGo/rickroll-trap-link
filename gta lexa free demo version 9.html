@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GTA ЛЁХА (V12.9 - ПРЫЖКИ И РОЗЫСК-ТАЙМЕР)</title>
+    <title>GTA ЛЁХА (V12.0 - ФИНАЛЬНЫЙ РЕЛИЗ С МЕМАМИ)</title>
     <style>
-        /* --- СТИЛИ --- */
         body { margin: 0; overflow: hidden; font-family: 'Arial', sans-serif; user-select: none; background: #000; }
         canvas { display: block; width: 100vw; height: 100vh; }
 
@@ -28,19 +27,6 @@
             animation: bounce 1s infinite;
         }
         @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-        /* BOUNDARY WARNING */
-        #boundaryWarning {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; justify-content: center; align-items: center;
-            background: rgba(255, 0, 0, 0.4); 
-            color: white; font-size: 4em; font-weight: bold;
-            text-shadow: 0 0 10px black;
-            z-index: 50; 
-            pointer-events: none;
-            text-align: center;
-            padding: 20px;
-        }
 
         /* --- МИНИ-КАРТА --- */
         #miniMap {
@@ -66,16 +52,7 @@
             border-radius: 50%;
             transform: translate(-50%, -50%);
         }
-        /* --- Маркер игрока (увеличенный) --- */
-        #playerMarker { 
-            background-color: lime; 
-            border: 2px solid white; 
-            z-index: 5; 
-            width: 12px; 
-            height: 12px;
-            box-shadow: 0 0 5px rgba(0, 255, 0, 0.8); 
-        }
-        /* ----------------------------------- */
+        #playerMarker { background-color: lime; border: 1px solid black; z-index: 5; }
         .policeMarker { background-color: red; border: 1px solid black; z-index: 4; }
         .mapBuilding {
             position: absolute;
@@ -88,67 +65,58 @@
         /* --- МЕНЮ --- */
         #menu {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, #0f0f0f 0%, #3a0000 100%); 
-            background-size: 200% 200%; 
+            background: rgba(0, 0, 0, 0.9); 
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             z-index: 100; color: white;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.8);
-            animation: backgroundShift 15s infinite alternate; 
-        }
-        @keyframes backgroundShift {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
-        }
-
-        #menu h1 { 
-            font-size: 7em; color: #ff0000; margin: 0; 
-            text-shadow: 6px 6px 0px #000, 8px 8px 15px rgba(255, 0, 0, 0.7); 
-            font-family: 'Impact', sans-serif;
-            letter-spacing: 10px;
-            animation: titlePulse 2s infinite alternate; 
-        }
-        @keyframes titlePulse {
-            from { transform: scale(1); }
-            to { transform: scale(1.05); }
-        }
-        
-        #menu #subtitle {
-            font-size: 2em; color: #ffaa00; text-shadow: 2px 2px 0px black;
-            margin-top: 10px;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.5); 
         }
 
         #menu button {
             background: #ffaa00;
             color: black;
-            border: 5px solid #ff0000; 
-            padding: 20px 40px;
-            font-size: 1.8em;
+            border: 3px solid #ffcc00;
+            padding: 15px 30px;
+            font-size: 1.5em;
             cursor: pointer;
-            margin: 15px;
-            transition: all 0.3s ease;
+            margin: 10px;
+            transition: all 0.2s;
             font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            transform: skew(-5deg); 
         }
         #menu button:hover {
             background: #ffcc00;
-            box-shadow: 0 0 30px rgba(255, 204, 0, 0.9);
-            transform: skew(-5deg) scale(1.05); 
-            border-color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.7);
         }
         
-        /* BUSTED SCREEN (обновленный) */
+        /* НОВЫЙ СТИЛЬ: Кнопка TUTORIAL VIDEO */
+        #tutorial-btn {
+            background-color: #007bff; /* Синий цвет */
+            color: white;
+            border: 3px solid #0056b3;
+            padding: 15px 30px;
+            font-size: 1.5em;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        #tutorial-btn:hover {
+            background: #0056b3;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.7);
+        }
+        /* КОНЕЦ НОВОГО СТИЛЯ */
+        
+        h1 { 
+            font-size: 6em; color: red; margin: 0; 
+            text-shadow: 4px 4px 0px #000;
+            font-family: 'Impact', sans-serif;
+            letter-spacing: 5px;
+        }
+        
+        /* BUSTED SCREEN */
         #bustedScreen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); color: red;
             flex-direction: column; justify-content: center; align-items: center; z-index: 100;
-        }
-        #bustedScreen h1 {
-            font-family: Impact; letter-spacing: 5px; color: red;
-            font-size: 6em;
-        }
-        #bustedScreen h2 {
-            font-size: 2.5em; color: #fff; margin-top: 10px;
         }
 
         /* HELP BOX */
@@ -194,14 +162,13 @@
 
     <div id="crosshair"></div>
     <div id="carHint">НАЖМИТЕ [F], ЧТОБЫ СЕСТЬ В МАШИНУ</div>
-    <div id="boundaryWarning"></div>
     
     <div id="hud">
         <div id="timeDisplay">12:00</div>
         <div id="hpDisplay" style="color: red; margin-top: 5px;">❤️ ЗДОРОВЬЕ: 100</div>
         <div id="weaponDisplay" style="color: orange; margin-top: 5px;">👊 КУЛАКИ</div>
         <div id="wantedLevel" style="color: white; margin-top: 5px;">★ РОЗЫСК: 0</div>
-        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.9 (ПРЫЖКИ, ТЕНИ, ТАЙМЕР)</div>
+        <div style="font-size: 0.8em; color: #ffff00; margin-top:10px;">V12.0 (ФИНАЛЬНЫЙ РЕЛИЗ С МЕМАМИ)</div>
     </div>
     
     <div id="miniMap">
@@ -212,15 +179,17 @@
 
     <div id="menu">
         <div>
-            <span class="bomb-emoji" style="font-size: 3em; margin-right: 20px;">🚨</span>
+            <span class="bomb-emoji">💣</span>
             <h1>GTA ЛЁХА</h1>
-            <span class="bomb-emoji" style="font-size: 3em; margin-left: 20px;">🚓</span>
+            <span class="bomb-emoji">💣</span>
         </div>
-        <div id="subtitle" style="font-size: 1.5em; color: #ffaa00; text-shadow: 2px 2px 0px black;">САМЫЙ КРИМИНАЛЬНЫЙ СИМУЛЯТОР</div>
-        <p style="margin-top: 50px; font-size: 1.8em; color: yellow; text-shadow: 2px 2px black;">СОЗДАНО ТИМУРОМ</p>
+        <div id="subtitle" style="font-size: 1.5em; color: #ffaa00; text-shadow: 2px 2px 0px black;">ВСЁ ДЛЯ ТЕБЯ, ОДЕССА</div>
+        <p style="margin-top: 50px; font-size: 1.8em; color: yellow;">БОЛЬШОЙ ГОРОД ДЛЯ ТЕБЯ</p>
+        <p style="font-size: 1.2em; color: #ffaa00;">ОТ ТИМУРА</p>
         <div class="menu-options">
             <button id="startBtn">НАЧАТЬ ИГРУ</button>
             <button id="help-btn">ПОМОЩЬ</button>
+            <button id="tutorial-btn">TUTORIAL VIDEO</button>
         </div>
     </div>
 
@@ -229,7 +198,7 @@
 
         <h4>📖 Сюжет и Смысл</h4>
         <p>Ты, Лёха, — крутой чувак в большом городе, который всегда попадает в какие-то передряги. Твоя задача — **выжить, поднять уровень розыска и избегать ментов!**</p>
-        <p>**ВНИМАНИЕ:** Не лезь за красную черту, это больно!</p>
+        <p>Смысл игры: **Устраивай хаос, угоняй тачки и беги от преследования!**</p>
 
         <h4>🎮 Управление</h4>
         <ul>
@@ -237,43 +206,37 @@
             <li>**Мышь:** Обзор/Поворот камеры</li>
             <li>**ЛКМ (Левая кнопка мыши):** Удар / Выстрел</li>
             <li>**F:** Сесть в машину / Выйти из машины</li>
-            <li>**ПРОБЕЛ (Space):** **Прыжок**</li>
             <li>**1:** Выбрать **Кулаки** 👊</li>
             <li>**2:** Выбрать **Пистолет** 🔫</li>
         </ul>
 
         <h4>🚨 Розыск и Полиция</h4>
-        <p>Каждое убийство (пешехода или полицейского) повышает уровень розыска (★). Полиция теперь стреляет издалека, а в машине будет вас **преследовать и обстреливать**! Полицейских стало больше — будь осторожен!</p>
-        <p><strong>НОВИНКА:</strong> Розыск спадает через некоторое время, если вы не совершаете преступлений и не находитесь в зоне видимости полиции.</p>
+        <p>Каждое убийство (пешехода или полицейского) повышает уровень розыска (★). Полиция будет тебя преследовать, а если догонит, увидишь надпись: **ШО ТУТ ДУМАЛ В СКАЗКУ ПОПАЛ!**</p>
 
         <button onclick="document.getElementById('infoBox').style.display='none'">ЗАКРЫТЬ</button>
     </div>
 
     <div id="bustedScreen">
-        <h1>ПОЙМАН</h1>
-        <h2>ШО ТУТ ДУМАЛ В СКАЗКУ ПОПАЛ</h2>
+        <h1 style="font-family: Impact; letter-spacing: 5px; color: red;">ПОЙМАН</h1>
+        <h2 style="font-size: 1.5em; color: #fff;">ШО ТУТ ДУМАЛ В СКАЗКУ ПОПАЛ</h2>
         <button onclick="location.reload()" style="background: red; border-color: #ff3333;">ПОВТОРИТЬ</button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.9) ===
+        // === КОНФИГУРАЦИЯ GTA LITE 3D (V12.0) ===
         const CAMERA_HEIGHT = 1.5;
-        const NPC_COUNT = 200;       
-        const POLICE_COUNT = 20;     
-        const TRAFFIC_CAR_COUNT = 15; 
+        const NPC_COUNT = 500; // УВЕЛИЧЕНО ПО ЗАПРОСУ
+        const TRAFFIC_CAR_COUNT = 50; 
         const RESPAWN_INTERVAL = 90 * 1000; 
         const MAP_SIZE = 400; 
         const BORDER_COLLISION_SIZE = 5; 
-        const VISIBLE_WALL_HEIGHT = 1; 
+        const VISIBLE_WALL_HEIGHT = 100; 
         const PLAYER_COLLISION_RADIUS = 1.5; 
         const MINIMAP_SIZE_PX = 200; 
         const MINIMAP_SCALE = 0.8; 
         const MAP_VIEW_RADIUS = MINIMAP_SIZE_PX / MINIMAP_SCALE / 2; 
-        const BOUNDARY_RANGE = 50; 
-        const BOUNDARY_DAMAGE_AREA = MAP_SIZE - BOUNDARY_RANGE;
-        const WANTED_DECAY_TIME = 15; // Секунд на понижение 1 уровня розыска
         
         // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
         let scene, camera, renderer;
@@ -296,25 +259,50 @@
         let currentWeapon = 'FIST';
         let gameTime = 10;
         let carSpeed = 0;
-        let wantedDecayTimer = 0; // Таймер для понижения розыска
+        
+        // --- НОВЫЕ ПЕРЕМЕННЫЕ ДЛЯ РОЗЫСКА ---
+        const WANTED_RESET_TIME = 30000; // 30 секунд
+        let wantedTimeout;
+        // ---------------------------------------
         
         const carRaycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(), 0, 10);
         
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let policeCar = null;
 
+        // --- ФУНКЦИЯ СБРОСА РОЗЫСКА ПО ТАЙМЕРУ ---
+        function resetWantedLevel() {
+            if (wantedLevel > 0) {
+                wantedLevel = 0;
+                document.getElementById('wantedLevel').innerText = "★ РОЗЫСК: " + wantedLevel;
+                console.log("Розыск сброшен по таймеру.");
+            }
+            clearTimeout(wantedTimeout);
+        }
+
+        // --- ОБНОВЛЕНИЕ РОЗЫСКА И ЗАПУСК ТАЙМЕРА ---
+        function updateWantedLevel(newLevel) {
+            clearTimeout(wantedTimeout);
+            wantedLevel = Math.max(0, Math.min(5, newLevel));
+            document.getElementById('wantedLevel').innerText = "★ РОЗЫСК: " + wantedLevel;
+            
+            if (wantedLevel > 0) {
+                // Запускаем таймер, если уровень розыска больше 0
+                wantedTimeout = setTimeout(resetWantedLevel, WANTED_RESET_TIME);
+            }
+        }
+        // ------------------------------------------
+
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x87ceeb);
-            scene.fog = new THREE.Fog(0x87ceeb, 10, 300);
+            scene.fog = new THREE.Fog(0x87ceeb, 10, 300); 
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
             
             player = new THREE.Group();
             player.add(camera);
             player.position.set(0, CAMERA_HEIGHT, 0); 
-            // --- ДОБАВЛЯЕМ ПЕРЕМЕННЫЕ ДЛЯ ПРЫЖКА ---
-            player.userData = { canJump: true, velocityY: 0 }; 
             scene.add(player);
 
             createWeapons();
@@ -324,15 +312,6 @@
             const sunLight = new THREE.DirectionalLight(0xffeebb, 0.9);
             sunLight.position.set(50, 150, 100);
             sunLight.castShadow = true;
-            // --- УЛУЧШЕНИЕ КАЧЕСТВА ТЕНЕЙ ---
-            sunLight.shadow.mapSize.width = 1024;
-            sunLight.shadow.mapSize.height = 1024;
-            sunLight.shadow.camera.near = 1;
-            sunLight.shadow.camera.far = 300;
-            sunLight.shadow.camera.left = -300;
-            sunLight.shadow.camera.right = 300;
-            sunLight.shadow.camera.top = 300;
-            sunLight.shadow.camera.bottom = -300;
             scene.add(sunLight);
 
             createCity();
@@ -340,30 +319,23 @@
             
             createMapBounds(); 
             
-            createEasterEggPullUp(150, 150, Math.PI); 
-            createEasterEggPullUp(-150, -150, 0); 
+            // --- ПАСХАЛКИ ЛЁХИ НА ГРАНИЦЕ ---
+            const boundsCenter = MAP_SIZE + BORDER_COLLISION_SIZE / 2;
+            // Лёха (Красный) - На Северной стене, лицом к карте
+            createEasterEggPullUp(0, -boundsCenter, 0);
+            // Второй NPC (Синий) - На Восточной стене, лицом к карте
+            createEasterEggPullUp(boundsCenter, 0, -Math.PI / 2);
             
-            spawnParkingLotCars(); 
-            
+            spawnMyCar();
             spawnTraffic();
             
-            spawnNPCs(POLICE_COUNT, true);
-            spawnNPCs(NPC_COUNT - POLICE_COUNT, false);
-            
+            spawnNPCs(NPC_COUNT); 
             setInterval(respawnNPCs, RESPAWN_INTERVAL); 
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Более мягкие тени
-            
-            // --- ГАРАНТИЯ ДОБАВЛЕНИЯ CANVAS В DOM ---
-            const canvasElement = renderer.domElement;
-            if (document.body.contains(canvasElement)) {
-                 document.body.removeChild(canvasElement);
-            }
-            document.body.appendChild(canvasElement);
-            // ---------------------------------------------------------------------
+            document.body.appendChild(renderer.domElement);
 
             raycaster = new THREE.Raycaster();
             
@@ -378,54 +350,33 @@
             });
 
             animate();
-        }
-        
-        // --- ОБНОВЛЕНИЕ ОТОБРАЖЕНИЯ РОЗЫСКА ---
-        function updateWantedLevelDisplay() {
-            const levelText = '★'.repeat(wantedLevel);
-            document.getElementById('wantedLevel').innerText = `★ РОЗЫСК: ${wantedLevel} ${levelText}`;
+            updateWantedLevel(0); // Инициализация розыска с таймером
         }
 
-        function spawnParkingLotCars() {
-            const spawnCars = [
-                { color: 0xff0000, isPolice: false, x: -10, z: 0 },
-                { color: 0x00FF00, isPolice: false, x: -15, z: 0 },
-                { color: 0, isPolice: true, x: -20, z: 0 }
-            ];
-
-            spawnCars.forEach(sc => {
-                const car = createCarMesh(sc.color, sc.isPolice);
-                car.position.set(sc.x, 0, sc.z);
-                car.rotation.y = Math.PI / 2;
-                car.castShadow = true;
-                cars.push(car);
-                scene.add(car);
-                collisionObjects.push(car.children[0]);
-            });
-        }
-
-
+        // === ФУНКЦИЯ ДЛЯ СОЗДАНИЯ ПАСХАЛКИ "ПОДТЯГИВАЮЩИЙСЯ ЛЁХА" ===
         function createEasterEggPullUp(x, z, rotY) {
             const group = new THREE.Group();
-            const bodyColor = (x > 0) ? 0xcc0000 : 0x0000cc; 
+            // Красный цвет для Лёхи, Синий для второго
+            const bodyColor = (x === 0 && z < 0) ? 0xcc0000 : 0x0000cc; 
             const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.5, 0.3), new THREE.MeshStandardMaterial({color: bodyColor})); 
             body.position.y = 0.75;
-            body.castShadow = true;
             const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), new THREE.MeshStandardMaterial({color: 0xffe0bd})); 
             head.position.y = 1.6;
-            head.castShadow = true;
             
-            const armGeo = new THREE.BoxGeometry(0.8, 0.15, 0.15); 
+            // Руки (горизонтально, чтобы имитировать хватку за край)
+            const armGeo = new THREE.BoxGeometry(0.8, 0.15, 0.15); // Широкие и плоские
             const armMat = new THREE.MeshStandardMaterial({color: 0xffe0bd});
             
             const arms = new THREE.Mesh(armGeo, armMat);
-            arms.position.set(0, 1.85, -0.2); 
-            arms.castShadow = true;
+            arms.position.set(0, 1.85, -0.2); // Располагаем руки над головой, чуть назад
             group.add(arms);
 
             group.add(body, head);
+
+            const wallHeight = VISIBLE_WALL_HEIGHT;
+            // Центр группы (y=0) должен быть на 98.15, чтобы руки (y=1.85) были на y=100 (верх стены).
             
-            group.position.set(x, 0, z); 
+            group.position.set(x, wallHeight - 1.85, z); 
             group.rotation.y = rotY; 
             group.castShadow = true;
             group.name = "EasterEggNPC"; 
@@ -433,18 +384,18 @@
             scene.add(group);
         }
 
+        // === СОЗДАНИЕ СКАМЕЙКИ ===
         function createBench(x, y, z, rotY) {
             const plank = new THREE.Mesh(new THREE.BoxGeometry(3, 0.2, 0.8), new THREE.MeshStandardMaterial({color: 0x8b4513})); 
             plank.position.y = 0.8;
-            plank.castShadow = true;
             
             const legGeo = new THREE.BoxGeometry(0.2, 0.8, 0.2); 
             const legMat = new THREE.MeshStandardMaterial({color: 0x5c4033});
 
-            const l1 = new THREE.Mesh(legGeo, legMat); l1.position.set( 1.3, 0.4,  0.3); l1.castShadow = true;
-            const l2 = new THREE.Mesh(legGeo, legMat); l2.position.set(-1.3, 0.4,  0.3); l2.castShadow = true;
-            const l3 = new THREE.Mesh(legGeo, legMat); l3.position.set( 1.3, 0.4, -0.3); l3.castShadow = true;
-            const l4 = new THREE.Mesh(legGeo, legMat); l4.position.set(-1.3, 0.4, -0.3); l4.castShadow = true;
+            const l1 = new THREE.Mesh(legGeo, legMat); l1.position.set( 1.3, 0.4,  0.3);
+            const l2 = new THREE.Mesh(legGeo, legMat); l2.position.set(-1.3, 0.4,  0.3);
+            const l3 = new THREE.Mesh(legGeo, legMat); l3.position.set( 1.3, 0.4, -0.3); 
+            const l4 = new THREE.Mesh(legGeo, legMat); l4.position.set(-1.3, 0.4, -0.3); 
             
             const benchGroup = new THREE.Group(); 
             benchGroup.add(plank, l1, l2, l3, l4); 
@@ -461,31 +412,15 @@
             collisionObjects.push(l4);
         }
         
-        // --- ДВИЖЕНИЕ ИГРОКА (С ПРЫЖКОМ) ---
+        // --- ДВИЖЕНИЕ ПЕШЕХОДА ---
         function movePlayer(dt) {
             const speed = 8; const dir = new THREE.Vector3();
             if (moveFwd) dir.z -= 1; if (moveBwd) dir.z += 1; if (moveLft) dir.x -= 1; if (moveRgt) dir.x += 1;
             dir.normalize().multiplyScalar(speed * dt);
             
             const moveVector = dir.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), player.rotation.y);
-            
-            // --- ЛОГИКА ПРЫЖКА И ГРАВИТАЦИИ ---
-            player.userData.velocityY -= 9.8 * dt * 2; // Применяем гравитацию (ускоренную)
-            player.position.y += player.userData.velocityY * dt;
-            
-            if (player.position.y < CAMERA_HEIGHT) {
-                player.position.y = CAMERA_HEIGHT;
-                player.userData.canJump = true;
-                player.userData.velocityY = 0;
-            }
-            // ----------------------------------
-            
-            const newPos = player.position.clone();
-            newPos.x += moveVector.x;
-            newPos.z += moveVector.z;
-            newPos.y = CAMERA_HEIGHT; // Проверка коллизий только на плоскости земли
-
-            let collided = false;
+            const newPos = player.position.clone().add(moveVector);
+            newPos.y = 0;
 
             for(let obj of collisionObjects) {
                 const oPos = new THREE.Vector3();
@@ -493,80 +428,24 @@
                 oPos.setFromMatrixPosition(obj.matrixWorld); 
                 oPos.y = 0;
 
-                let isBuilding = obj.geometry.type === 'BoxGeometry' && obj.geometry.parameters.width > 10;
-
-                if (isBuilding) { 
-                    const w = obj.geometry.parameters.width / 2;
-                    const d = obj.geometry.parameters.depth / 2;
-                    const cushion = PLAYER_COLLISION_RADIUS;
-
-                    if (
-                        newPos.x > oPos.x - w - cushion && newPos.x < oPos.x + w + cushion &&
-                        newPos.z > oPos.z - d - cushion && newPos.z < oPos.z + d + cushion
-                    ) {
-                        const overlapX = Math.min(newPos.x - (oPos.x - w), (oPos.x + w) - newPos.x);
-                        const overlapZ = Math.min(newPos.z - (oPos.z - d), (oPos.z + d) - newPos.z);
-                        
-                        let push = new THREE.Vector3();
-                        if (overlapX < overlapZ) {
-                            const dirX = newPos.x > oPos.x ? 1 : -1;
-                            push.x = dirX * (cushion - overlapX);
-                        } else {
-                            const dirZ = newPos.z > oPos.z ? 1 : -1;
-                            push.z = dirZ * (cushion - overlapZ);
-                        }
-
-                        player.position.x += push.x;
-                        player.position.z += push.z;
-                        dir.set(0, 0, 0); 
-                        collided = true;
-                        break;
-                    }
-                } else if (newPos.distanceTo(oPos) < PLAYER_COLLISION_RADIUS) { 
-                    const push = newPos.clone().sub(oPos).normalize().multiplyScalar(PLAYER_COLLISION_RADIUS - newPos.distanceTo(oPos)); 
-                    player.position.x += push.x;
+                if (newPos.distanceTo(oPos) < PLAYER_COLLISION_RADIUS) { 
+                    const push = newPos.clone().sub(oPos).normalize().multiplyScalar(1.0); 
+                    player.position.x += push.x; 
                     player.position.z += push.z;
                     dir.set(0, 0, 0); 
-                    collided = true;
                     break;
                 }
             }
-
-            if (!collided) {
-                player.translateX(dir.x); 
-                player.translateZ(dir.z); 
-            }
             
-            // --- ЛОГИКА УРОНА ЗА ГРАНИЦЕЙ ---
-            const boundaryWarning = document.getElementById('boundaryWarning');
-            let isOutOfBounds = Math.abs(player.position.x) > BOUNDARY_DAMAGE_AREA || Math.abs(player.position.z) > BOUNDARY_DAMAGE_AREA;
-            
-            if (isOutOfBounds) {
-                 boundaryWarning.style.display = 'flex';
-                 boundaryWarning.innerText = "🛑 ЛЁХА ДУРАЧОК НЕ ЛЕЗЬ ТУДА (СВОБОДА НЕ НАШЕ МЕСТО)";
-                 
-                 if (moveFwd || moveBwd || moveLft || moveRgt) {
-                     const movingOutX = Math.abs(player.position.x) > BOUNDARY_DAMAGE_AREA && Math.sign(player.position.x) === Math.sign(moveVector.x);
-                     const movingOutZ = Math.abs(player.position.z) > BOUNDARY_DAMAGE_AREA && Math.sign(player.position.z) === Math.sign(moveVector.z);
-                      
-                     if (movingOutX || movingOutZ) {
-                         const damagePerSecond = Math.floor(Math.random() * 6) + 30; 
-                         playerHP -= damagePerSecond * dt * 2; 
-                          
-                         if (playerHP <= 0) { endGame(); }
-                         document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${Math.max(0, Math.floor(playerHP))}`;
-                     }
-                 }
-            } else {
-                 boundaryWarning.style.display = 'none';
-            }
+            player.translateX(dir.x); player.translateZ(dir.z); 
+            player.position.y = CAMERA_HEIGHT;
 
             let nearCar = false; cars.forEach(c => { if(player.position.distanceTo(c.position) < 5) nearCar = true; });
             document.getElementById('carHint').style.display = nearCar ? 'block' : 'none';
-            if ((moveFwd||moveBwd||moveLft||moveRgt) && player.userData.canJump) weaponGroup.position.y = -0.4 + Math.sin(performance.now()*0.015)*0.02;
+            if (moveFwd||moveBwd||moveLft||moveRgt) weaponGroup.position.y = -0.4 + Math.sin(performance.now()*0.015)*0.02;
         }
 
-        // === ГЛОБАЛЬНАЯ ФУНКЦИЯ ВЫСТРЕЛА NPC (Урон увеличен и проверен) ---
+        // === ГЛОБАЛЬНАЯ ФУНКЦИЯ ВЫСТРЕЛА NPC ===
         function npcShoot(npc) {
             if (npc.userData.lastShot && performance.now() - npc.userData.lastShot < 1000) return; 
             if (currentCar) return; 
@@ -579,26 +458,23 @@
             
             raycaster.set(new THREE.Vector3(npc.position.x, 1.5, npc.position.z), direction);
             
-            const intersectables = collisionObjects.concat(npcs).filter(o => o !== npc);
-            const hits = raycaster.intersectObjects(intersectables.concat([player]), true); 
+            const intersectables = collisionObjects.concat(npcs).concat([player]);
+            const hits = raycaster.intersectObjects(intersectables);
             
             if (hits.length > 0) {
-                const hit = hits[0];
-                
-                let hitPlayer = false;
-                let obj = hit.object;
-                while (obj.parent) {
-                    if (obj === player) {
-                        hitPlayer = true;
-                        break;
+                const hitPlayer = hits.find(hit => {
+                    let obj = hit.object;
+                    while (obj.parent) {
+                        if (obj === player) return true;
+                        obj = obj.parent;
                     }
-                    obj = obj.parent;
-                }
+                    return false;
+                });
 
-                if (hitPlayer && hit.distance < 150) { 
-                    const damage = Math.floor(Math.random() * 10) + 15; 
+                if (hitPlayer && hitPlayer.distance < 60) {
+                    const damage = Math.floor(Math.random() * 3) + 3; // 3-5 HP
                     playerHP -= damage;
-                    document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${Math.max(0, Math.floor(playerHP))}`;
+                    document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${playerHP}`;
                     
                     if (playerHP <= 0) {
                         endGame(); 
@@ -606,32 +482,8 @@
                 }
             }
         }
-        
-        // === АТАКА ПОЛИЦЕЙСКОЙ МАШИНЫ (Урон увеличен и проверен) ===
-        function policeCarAttack(pCar, tCar) {
-            const distance = pCar.position.distanceTo(tCar.position);
-            const attackRange = 75; 
-            const attackCooldown = 1500; 
 
-            if (distance < attackRange && pCar.userData.lastShotTime + attackCooldown < performance.now()) {
-                pCar.userData.lastShotTime = performance.now();
-                playSound('shoot'); 
-
-                if (Math.random() < 0.7) { 
-                    const damage = Math.floor(Math.random() * 8) + 10; 
-                    playerHP -= damage;
-                    
-                    document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${Math.max(0, Math.floor(playerHP))}`;
-                    
-                    if (playerHP <= 0) {
-                        endGame();
-                    }
-                }
-            }
-        }
-
-
-        // === МИНИ-КАРТА ===
+        // === МИНИ-КАРТА (ФИНАЛЬНЫЙ ФИКС СЛЕДОВАНИЯ) ===
         function updateMiniMap() {
             const mapDiv = document.getElementById('mapContent');
             const mapW = MINIMAP_SIZE_PX;
@@ -640,6 +492,7 @@
             const playerX = currentCar ? currentCar.position.x : player.position.x;
             const playerZ = currentCar ? currentCar.position.z : player.position.z;
 
+            // Вычисляем смещение: Центр карты - Позиция игрока на карте
             const offsetMapX = mapW / 2 - playerX * MINIMAP_SCALE;
             const offsetMapZ = mapH / 2 - (-playerZ * MINIMAP_SCALE); 
 
@@ -649,7 +502,7 @@
                 if (el.id !== 'playerMarker') el.remove();
             });
 
-            // РИСОВАНИЕ ЗДАНИЙ 
+            // 2. РИСОВАНИЕ ЗДАНИЙ 
             mapBuildings.forEach(building => {
                 const dist = Math.sqrt(Math.pow(building.x - playerX, 2) + Math.pow(building.z - playerZ, 2));
                 if (dist > MAP_VIEW_RADIUS * 1.5) return;
@@ -668,12 +521,12 @@
                 mapDiv.appendChild(bDiv);
             });
             
-            // МАРКЕР ИГРОКА
+            // 3. МАРКЕР ИГРОКА (позиция на mapContent, чтобы он оставался в центре)
             const playerMarker = document.getElementById('playerMarker');
             playerMarker.style.left = `${playerX * MINIMAP_SCALE}px`;
             playerMarker.style.top = `${-playerZ * MINIMAP_SCALE}px`;
             
-            // МАРКЕРЫ ПОЛИЦИИ
+            // 4. МАРКЕРЫ ПОЛИЦИИ
             npcs.filter(n => n.userData.isPolice && wantedLevel > 0).forEach(npc => {
                 const npcX = npc.position.x;
                 const npcZ = npc.position.z;
@@ -743,19 +596,34 @@
                 const offset = new THREE.Vector3(0, 5, 10); offset.applyMatrix4(currentCar.matrixWorld);
                 camera.position.lerp(offset, 0.1); camera.lookAt(currentCar.position);
 
+                // --- НОВАЯ ЛОГИКА: Обработка "Границы" для машины ---
+                if (Math.abs(currentCar.position.x) > MAP_SIZE || Math.abs(currentCar.position.z) > MAP_SIZE) {
+                    console.log("🚗 Вы достигли границы карты! Поездка за границу невозможна. (Как вы и просили, ничего не происходит, кроме остановки!)");
+                    
+                    // Жесткое ограничение позиции
+                    currentCar.position.x = Math.max(-MAP_SIZE, Math.min(MAP_SIZE, currentCar.position.x));
+                    currentCar.position.z = Math.max(-MAP_SIZE, Math.min(MAP_SIZE, currentCar.position.z));
+                    carSpeed = 0; // Сброс скорости при ударе о невидимую стену
+                }
+
             } else {
                 // Движение пешехода
                 movePlayer(dt);
+                
+                // --- НОВАЯ ЛОГИКА: Обработка "Границы" для пешехода ---
+                if (Math.abs(player.position.x) > MAP_SIZE || Math.abs(player.position.z) > MAP_SIZE) {
+                     console.log("🚶 Вы достигли границы карты! Выход за пределы невозможен.");
+                     player.position.x = Math.max(-MAP_SIZE, Math.min(MAP_SIZE, player.position.x));
+                     player.position.z = Math.max(-MAP_SIZE, Math.min(MAP_SIZE, player.position.z));
+                }
             }
 
             // --- ЛОГИКА ПОЛИЦЕЙСКОЙ МАШИНЫ ---
             if (wantedLevel > 0 && currentCar && !policeCar) {
-                const availableCars = cars.filter(c => c.userData.isPoliceCar && c !== currentCar && !c.userData.isBeingUsedByPolice);
+                const availableCars = cars.filter(c => c !== currentCar && c.userData.isPoliceCar);
                 if (availableCars.length > 0) {
                     policeCar = availableCars[0]; 
                     policeCar.userData.isBeingUsedByPolice = true;
-                    policeCar.userData.speed = 0; 
-                    policeCar.userData.lastShotTime = performance.now();
                 }
             }
             if (policeCar && currentCar) {
@@ -779,8 +647,6 @@
 
                 pCar.userData.speed = Math.min(pCar.userData.speed + 15 * dt, 40);
                 pCar.translateZ(-pCar.userData.speed * dt); 
-                
-                policeCarAttack(policeCar, currentCar);
             }
             
             // --- ЛОГИКА NPC: ДВИЖЕНИЕ, ПАНИКА И СТРЕЛЬБА ---
@@ -790,8 +656,6 @@
                 npc.position.y = 0; 
                 let speed = 1.5;
                 let targetDir = npc.userData.dir.clone();
-                let shouldTurn = false;
-                const NPC_BOUNDARY_FUDGE = 20; 
 
                 if (npc.userData.state === 'PANIC') { 
                     speed = 9; 
@@ -807,7 +671,7 @@
                     const distance = npc.position.distanceTo(targetPos);
 
                     if (currentCar) {
-                        speed = 0; 
+                        speed = 0;
                         npc.lookAt(targetPos);
                     } else {
                         speed = 8; 
@@ -816,7 +680,8 @@
                         npc.lookAt(targetPos);
 
                         if (distance < 2) endGame(); 
-                        if (distance < 150 && npc.userData.hasWeapon === 'PISTOL') { 
+
+                        if (distance < 60 && npc.userData.hasWeapon === 'PISTOL') {
                              npcShoot(npc);
                         }
                     }
@@ -824,27 +689,17 @@
 
                 const collisionDist = npc.userData.state === 'PANIC' ? 6 : 4; 
                 
-                const checkPosAhead = npc.position.clone().add(targetDir.clone().normalize().multiplyScalar(15));
-                if (Math.abs(checkPosAhead.x) > MAP_SIZE - NPC_BOUNDARY_FUDGE || Math.abs(checkPosAhead.z) > MAP_SIZE - NPC_BOUNDARY_FUDGE) {
-                    shouldTurn = true;
-                }
-                
                 raycaster.set(new THREE.Vector3(npc.position.x, 1, npc.position.z), targetDir);
                 const hits = raycaster.intersectObjects(collisionObjects);
                 
                 if (hits.length > 0 && hits[0].distance < collisionDist) { 
-                    shouldTurn = true; 
-                } 
-                
-                if (shouldTurn) {
                     const rotationAngle = Math.PI/3 + Math.random() * Math.PI/3; 
                     targetDir.applyAxisAngle(new THREE.Vector3(0,1,0), rotationAngle); 
-                }
+                } 
                 
                 npc.userData.dir.copy(targetDir.normalize()); 
 
                 const nextPos = npc.position.clone().add(npc.userData.dir.clone().multiplyScalar(speed * dt));
-                
                 if (Math.abs(nextPos.x) > MAP_SIZE || Math.abs(nextPos.z) > MAP_SIZE) {
                     npc.userData.dir.applyAxisAngle(new THREE.Vector3(0,1,0), Math.PI + (Math.random()-0.5)*0.5);
                 } else {
@@ -854,46 +709,6 @@
                     }
                 }
             });
-
-            // --- ЛОГИКА ТАЙМЕРА РОЗЫСКА ---
-            if (wantedLevel > 0) {
-                let isPolicePursuing = policeCar && currentCar;
-                
-                // Проверяем, есть ли рядом полиция в радиусе 50
-                if (!isPolicePursuing) {
-                    const targetPos = currentCar ? currentCar.position : player.position;
-                    const pursuingNPCs = npcs.filter(n => 
-                        n.userData.isPolice && 
-                        n.position.distanceTo(targetPos) < 50 
-                    );
-                    isPolicePursuing = pursuingNPCs.length > 0;
-                }
-
-                if (isPolicePursuing) {
-                    // Если преследуют, сбрасываем таймер
-                    wantedDecayTimer = 0;
-                } else {
-                    // Если нет преследования, запускаем таймер
-                    wantedDecayTimer += dt;
-                    
-                    if (wantedDecayTimer >= WANTED_DECAY_TIME) {
-                        wantedLevel = Math.max(0, wantedLevel - 1);
-                        wantedDecayTimer = 0;
-                        updateWantedLevelDisplay();
-                        
-                        if (wantedLevel === 0) {
-                             npcs.forEach(n => { if(n.userData.state === 'PANIC') n.userData.state = 'WALK'; });
-                             if (policeCar) {
-                                policeCar.userData.isBeingUsedByPolice = false;
-                                policeCar = null;
-                             }
-                        }
-                    }
-                }
-            } else {
-                wantedDecayTimer = 0;
-            }
-            // -----------------------------
             
             updateMiniMap(); 
             updateParticles(); renderer.render(scene, camera);
@@ -902,47 +717,30 @@
         // --- ОСТАЛЬНЫЕ ФУНКЦИИ ---
         function createMapBounds() {
             const bounds = MAP_SIZE + BORDER_COLLISION_SIZE / 2;
-            const material = new THREE.MeshStandardMaterial({ 
-                color: 0x808080, 
-                opacity: 0.1, 
-                transparent: true,
-                roughness: 0.9, 
-                metalness: 0.1 
-            }); 
+            const material = new THREE.MeshStandardMaterial({ color: 0x808080, roughness: 0.9, metalness: 0.1 }); 
             const wall1 = new THREE.Mesh(new THREE.BoxGeometry(MAP_SIZE * 2 + BORDER_COLLISION_SIZE * 2, VISIBLE_WALL_HEIGHT, BORDER_COLLISION_SIZE), material); wall1.position.set(0, VISIBLE_WALL_HEIGHT/2, -bounds); collisionObjects.push(wall1); scene.add(wall1);
             const wall2 = new THREE.Mesh(new THREE.BoxGeometry(MAP_SIZE * 2 + BORDER_COLLISION_SIZE * 2, VISIBLE_WALL_HEIGHT, BORDER_COLLISION_SIZE), material); wall2.position.set(0, VISIBLE_WALL_HEIGHT/2, bounds); collisionObjects.push(wall2); scene.add(wall2);
             const wall3 = new THREE.Mesh(new THREE.BoxGeometry(BORDER_COLLISION_SIZE, VISIBLE_WALL_HEIGHT, MAP_SIZE * 2), material); wall3.position.set(-bounds, VISIBLE_WALL_HEIGHT/2, 0); collisionObjects.push(wall3); scene.add(wall3);
             const wall4 = new THREE.Mesh(new THREE.BoxGeometry(BORDER_COLLISION_SIZE, VISIBLE_WALL_HEIGHT, MAP_SIZE * 2), material); wall4.position.set(bounds, VISIBLE_WALL_HEIGHT/2, 0); collisionObjects.push(wall4); scene.add(wall4);
         }
-        
         function respawnNPCs() {
-            const currentCivs = npcs.filter(n => !n.userData.isPolice).length;
-            const currentPolice = npcs.filter(n => n.userData.isPolice).length;
-            
-            const missingCivs = NPC_COUNT - POLICE_COUNT - currentCivs;
-            const missingPolice = POLICE_COUNT - currentPolice;
-
-            if (missingCivs > 0) {
-                spawnNPCs(missingCivs, false);
-            }
-            if (missingPolice > 0) {
-                spawnNPCs(missingPolice, true);
+            const missingCount = npcs.length < NPC_COUNT ? NPC_COUNT - npcs.length : 0;
+            if (missingCount > 0) {
+                spawnNPCs(missingCount); 
             }
         }
-        
         function createCity() {
             const ground = new THREE.Mesh(new THREE.PlaneGeometry(MAP_SIZE * 2 + 100, MAP_SIZE * 2 + 100), new THREE.MeshStandardMaterial({ color: 0xCCCCCC })); ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
-            const parkingLot = new THREE.Mesh(new THREE.PlaneGeometry(30, 40), new THREE.MeshStandardMaterial({ color: 0x222222 })); parkingLot.rotation.x = -Math.PI/2; parkingLot.position.set(-15, 0.02, 0); parkingLot.receiveShadow = true; scene.add(parkingLot); 
+            const parkingLot = new THREE.Mesh(new THREE.PlaneGeometry(30, 40), new THREE.MeshStandardMaterial({ color: 0x222222 })); parkingLot.rotation.x = -Math.PI/2; parkingLot.position.set(5, 0.02, 10); parkingLot.receiveShadow = true; scene.add(parkingLot);
             const lineGeo = new THREE.PlaneGeometry(0.2, 10); const lineMat = new THREE.MeshBasicMaterial({color: 0xffff00});
-            const line1 = new THREE.Mesh(lineGeo, lineMat); line1.rotation.x = -Math.PI/2; line1.position.set(-10, 0.03, -10); scene.add(line1);
-            const line2 = new THREE.Mesh(lineGeo, lineMat); line2.rotation.x = -Math.PI/2; line2.position.set(-20, 0.03, -10); scene.add(line2);
-
+            const line1 = new THREE.Mesh(lineGeo, lineMat); line1.rotation.x = -Math.PI/2; line1.position.set(0, 0.03, 10); scene.add(line1);
+            const line2 = new THREE.Mesh(lineGeo, lineMat); line2.rotation.x = -Math.PI/2; line2.position.set(10, 0.03, 10); scene.add(line2);
             const blockSize = 50;
             for(let x = -MAP_SIZE; x <= MAP_SIZE; x+=blockSize) {
                 for(let z = -MAP_SIZE; z <= MAP_SIZE; z+=blockSize) {
                     if (x > -30 && x < 30 && z > -30 && z < 40) continue; 
                     if (Math.abs(x) < MAP_SIZE && Math.abs(z) < MAP_SIZE && (x % 100 === 0 || z % 100 === 0)) {
-                            const roadPatch = new THREE.Mesh(new THREE.PlaneGeometry(blockSize, blockSize), new THREE.MeshStandardMaterial({ color: 0x333333 })); roadPatch.rotation.x = -Math.PI/2; roadPatch.position.set(x, 0.01, z); roadPatch.receiveShadow = true; scene.add(roadPatch);
+                            const roadPatch = new THREE.Mesh(new THREE.PlaneGeometry(blockSize, blockSize), new THREE.MeshStandardMaterial({ color: 0x333333 })); roadPatch.rotation.x = -Math.PI/2; roadPatch.position.set(x, 0.01, z); scene.add(roadPatch);
                     }
                     if (Math.abs(x) < MAP_SIZE - 50 && Math.abs(z) < MAP_SIZE - 50 && Math.abs(x) % 100 !== 0 && Math.abs(z) % 100 !== 0) {
                         const h = Math.random() * 25 + 10; const w = blockSize - 15;
@@ -955,24 +753,28 @@
                         mapBuildings.push({x: x, z: z, w: w, d: w});
                     }
                     else if (Math.abs(x) > MAP_SIZE - 50 || Math.abs(z) > MAP_SIZE - 50) {
-                            if (Math.random() > 0.95) createTree(x + Math.random()*10, z + Math.random()*10); 
+                            if (Math.random() > 0.8) createTree(x + Math.random()*10, z + Math.random()*10); 
                     }
                 }
             }
         }
         function createStreetFurniture() {
             createBench(-40, 0.01, 5, 0); 
+            createBench(150, 0.01, 150, Math.PI/2); 
+            createBench(-20, 0.01, 20, Math.PI/2); 
+            createBench(35, 0.01, -25, Math.PI/2);
             createBench(-100, 0.01, -5, 0);
+            createBench(0, 0.01, -120, Math.PI);
         }
         function createTree(x, z) {
             const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.6, 3), new THREE.MeshStandardMaterial({color:0x5c4033})); trunk.position.set(x, 1.5, z); trunk.castShadow = true; scene.add(trunk); collisionObjects.push(trunk);
-            const leaves = new THREE.Mesh(new THREE.DodecahedronGeometry(2.5), new THREE.MeshStandardMaterial({color:0x228b22})); leaves.position.set(x, 4, z); leaves.castShadow = true; scene.add(leaves);
+            const leaves = new THREE.Mesh(new THREE.DodecahedronGeometry(2.5), new THREE.MeshStandardMaterial({color:0x228b22})); leaves.position.set(x, 4, z); scene.add(leaves);
         }
         function createCarMesh(color, isPolice) {
             const group = new THREE.Group();
             const bodyColor = isPolice ? 0x0000FF : color; 
-            const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 4.6), new THREE.MeshStandardMaterial({color: bodyColor})); body.position.y = 0.6; body.castShadow = true; group.add(body);
-            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.6, 2.5), new THREE.MeshStandardMaterial({color: 0x111111})); cabin.position.set(0, 1.2, -0.1); cabin.castShadow = true; group.add(cabin);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 4.6), new THREE.MeshStandardMaterial({color: bodyColor})); body.position.y = 0.6; group.add(body);
+            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.6, 2.5), new THREE.MeshStandardMaterial({color: 0x111111})); cabin.position.set(0, 1.2, -0.1); group.add(cabin);
             const wMat = new THREE.MeshStandardMaterial({color: 0x000000});
             const wGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.4, 16); wGeo.rotateZ(Math.PI/2);
             [[1.1,1.5],[-1.1,1.5],[1.1,-1.5],[-1.1,-1.5]].forEach(p=>{
@@ -985,7 +787,7 @@
                 group.add(light);
             }
 
-            group.userData = { speed: 0, steering: 0, isPoliceCar: isPolice, isBeingUsedByPolice: false, lastShotTime: 0 };
+            group.userData = { speed: 0, steering: 0, isPoliceCar: isPolice };
             return group;
         }
         function getRandomMapPosition() {
@@ -993,33 +795,31 @@
             let z = (Math.random()-0.5) * MAP_SIZE * 2 * 0.9;
             return {x, z};
         }
-        
+        function spawnMyCar() {
+            const {x, z} = getRandomMapPosition();
+            const car = createCarMesh(0xff0000, false); car.position.set(x, 0, z); car.rotation.y = -Math.PI / 4; car.castShadow = true; cars.push(car); scene.add(car);
+        }
         function spawnTraffic() {
-            for(let i=0; i<TRAFFIC_CAR_COUNT; i++) {
-                const isPolice = Math.random() < 0.1; 
-                const car = createCarMesh(Math.random()*0xffffff, isPolice);
-                
-                let x, z;
-                do {
-                    x = (Math.random()-0.5) * MAP_SIZE * 2 * 0.9; 
-                    z = (Math.random()-0.5) * MAP_SIZE * 2 * 0.9;
-                } while (Math.abs(x) < 30 && Math.abs(z) < 30); 
-                
-                car.position.set(x, 0, z); 
-                car.rotation.y = Math.random() * Math.PI * 2; 
-                car.castShadow = true; 
-                scene.add(car); 
-                cars.push(car); 
+            const {x: px, z: pz} = getRandomMapPosition();
+            const pCar = createCarMesh(0, true); 
+            pCar.position.set(px, 0, pz); pCar.rotation.y = Math.random() * Math.PI * 2; 
+            pCar.castShadow = true; cars.push(pCar); scene.add(pCar);
+            collisionObjects.push(pCar.children[0]);
+            
+            for(let i=0; i<TRAFFIC_CAR_COUNT - 1; i++) {
+                const car = createCarMesh(Math.random()*0xffffff, false);
+                const {x, z} = getRandomMapPosition();
+                car.position.set(x, 0, z); car.rotation.y = Math.random() * Math.PI * 2; car.castShadow = true; scene.add(car); cars.push(car); 
                 collisionObjects.push(car.children[0]);
             }
         }
-        
-        function spawnNPCs(count, isPolice) {
+        function spawnNPCs(count) {
             for(let i=0; i<count; i++) {
+                const isPolice = (i===0);
                 const group = new THREE.Group();
                 const bodyColor = isPolice ? 0x000088 : Math.random()*0xffffff;
-                const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.5, 0.3), new THREE.MeshStandardMaterial({color: bodyColor})); body.position.y = 0.75; body.castShadow = true;
-                const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), new THREE.MeshStandardMaterial({color: 0xffe0bd})); head.position.y = 1.6; head.castShadow = true;
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.5, 0.3), new THREE.MeshStandardMaterial({color: bodyColor})); body.position.y = 0.75;
+                const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), new THREE.MeshStandardMaterial({color: 0xffe0bd})); head.position.y = 1.6;
                 group.add(body); group.add(head);
                 const {x, z} = getRandomMapPosition();
                 group.position.set(x, 0, z); group.castShadow = true;
@@ -1027,34 +827,14 @@
                 scene.add(group); npcs.push(group);
             }
         }
-        
         function tryEnterCar() {
             if (currentCar) {
-                player.position.copy(currentCar.position); 
-                player.position.x -= 3; 
-                player.position.y = CAMERA_HEIGHT; 
-                player.userData.canJump = true; // Сброс после выхода
-                player.userData.velocityY = 0;
-                player.visible = true; 
-                player.add(camera); 
-                camera.position.set(0,0,0); 
-                camera.rotation.set(0,0,0); 
-                currentCar = null; 
-                document.getElementById('crosshair').style.display = 'block'; 
-                document.getElementById('weaponDisplay').style.display = 'block'; 
-                weaponGroup.visible = true;
+                player.position.copy(currentCar.position); player.position.x -= 3; player.position.y = CAMERA_HEIGHT; player.visible = true; player.add(camera); camera.position.set(0,0,0); camera.rotation.set(0,0,0); currentCar = null; document.getElementById('crosshair').style.display = 'block'; document.getElementById('weaponDisplay').style.display = 'block'; weaponGroup.visible = true;
             } else {
                 let closest = null; let minD = 5;
                 cars.forEach(c => { const d = player.position.distanceTo(c.position); if(d<minD){ minD=d; closest=c; }});
                 if (closest && !closest.userData.isBeingUsedByPolice) { 
-                    currentCar = closest; 
-                    player.visible = false; 
-                    scene.add(camera); 
-                    document.getElementById('crosshair').style.display = 'none'; 
-                    document.getElementById('weaponDisplay').style.display = 'none'; 
-                    document.getElementById('carHint').style.display = 'none'; 
-                    weaponGroup.visible = false; 
-                    carSpeed = 0;
+                    currentCar = closest; player.visible = false; scene.add(camera); document.getElementById('crosshair').style.display = 'none'; document.getElementById('weaponDisplay').style.display = 'none'; document.getElementById('carHint').style.display = 'none'; weaponGroup.visible = false; carSpeed = 0;
                 }
             }
         }
@@ -1062,61 +842,33 @@
             createBlood(npc.position); 
             if(byCar) playSound('hit'); 
             
+            let levelIncrease = 0;
             if (npc.userData.isPolice) {
-                 wantedLevel = Math.min(wantedLevel + 3, 5);
+                 levelIncrease = 3;
                  if (policeCar && policeCar.userData.isBeingUsedByPolice) policeCar = null; 
             } else {
-                 wantedLevel = Math.min(wantedLevel + 1, 5);
+                 levelIncrease = 1;
             }
             
-            wantedDecayTimer = 0; // Сброс таймера розыска при совершении преступления
-            updateWantedLevelDisplay();
-
+            // ОБНОВЛЕНИЕ РОЗЫСКА ЧЕРЕЗ НОВУЮ ФУНКЦИЮ С ТАЙМЕРОМ
+            updateWantedLevel(wantedLevel + levelIncrease);
+            
             scene.remove(npc); 
             npcs.splice(npcs.indexOf(npc), 1); 
             npcs.forEach(n => { if(!n.userData.isPolice) n.userData.state = 'PANIC'; }); 
+            spawnNPCs(1); 
         }
         function createBlood(pos) { for(let k=0; k<8; k++) { const m = new THREE.Mesh(new THREE.SphereGeometry(0.2), new THREE.MeshBasicMaterial({color:0x880000})); m.position.copy(pos); m.position.x+=(Math.random()-0.5); m.position.z+=(Math.random()-0.5); m.position.y=0.1; scene.add(m); particles.push({mesh:m, life:100}); } }
         function updateParticles() { for(let i=particles.length-1; i>=0; i--) { particles[i].life--; if(particles[i].life<=0) { scene.remove(particles[i].mesh); particles.splice(i,1); } } }
         function createWeapons() { weaponGroup = new THREE.Group(); camera.add(weaponGroup); weaponGroup.position.set(0.3, -0.4, -0.5); const fist = new THREE.Mesh(new THREE.SphereGeometry(0.15), new THREE.MeshStandardMaterial({color: 0xffccaa})); fist.name = 'FIST'; weaponGroup.add(fist); const gun = new THREE.Group(); gun.visible = false; gun.name = 'PISTOL'; gun.add(new THREE.Mesh(new THREE.BoxGeometry(0.08,0.08,0.4), new THREE.MeshStandardMaterial({color:0x111111}))); weaponGroup.add(gun); }
-        
-        function onKeyDown(e) { 
-            if(e.code==='KeyW') moveFwd=true; 
-            if(e.code==='KeyS') moveBwd=true; 
-            if(e.code==='KeyA') moveLft=true; 
-            if(e.code==='KeyD') moveRgt=true; 
-            if(e.code==='KeyF') tryEnterCar(); 
-            
-            // --- ПРЫЖОК ---
-            if (e.code === 'Space' && player.userData.canJump && !currentCar) { 
-                player.userData.velocityY = 10; 
-                player.userData.canJump = false; 
-            }
-            // -------------
-            
-            if(e.code==='Digit1'&&!currentCar) { currentWeapon='FIST'; weaponGroup.children[0].visible=true; weaponGroup.children[1].visible=false; document.getElementById('weaponDisplay').innerText='👊 КУЛАКИ'; } 
-            if(e.code==='Digit2'&&!currentCar) { currentWeapon='PISTOL'; weaponGroup.children[0].visible=false; weaponGroup.children[1].visible=true; document.getElementById('weaponDisplay').innerText='🔫 ПИСТОЛЕТ'; } 
-        }
-
-        function onKeyUp(e) { 
-            if(e.code==='KeyW') moveFwd=false; 
-            if(e.code==='KeyS') moveBwd=false; 
-            if(e.code==='KeyA') moveLft=false; 
-            if(e.code==='KeyD') moveRgt=false; 
-        }
+        function onKeyDown(e) { if(e.code==='KeyW') moveFwd=true; if(e.code==='KeyS') moveBwd=true; if(e.code==='KeyA') moveLft=true; if(e.code==='KeyD') moveRgt=true; if(e.code==='KeyF') tryEnterCar(); if(e.code==='Digit1'&&!currentCar) { currentWeapon='FIST'; weaponGroup.children[0].visible=true; weaponGroup.children[1].visible=false; document.getElementById('weaponDisplay').innerText='👊 КУЛАКИ'; } if(e.code==='Digit2'&&!currentCar) { currentWeapon='PISTOL'; weaponGroup.children[0].visible=false; weaponGroup.children[1].visible=true; document.getElementById('weaponDisplay').innerText='🔫 ПИСТОЛЕТ'; } }
+        function onKeyUp(e) { if(e.code==='KeyW') moveFwd=false; if(e.code==='KeyS') moveBwd=false; if(e.code==='KeyA') moveLft=false; if(e.code==='KeyD') moveRgt=false; }
         function onMouseMove(e) { if(currentCar||document.pointerLockElement!==document.body) return; player.rotation.y -= e.movementX*0.002; camera.rotation.x -= e.movementY*0.002; camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x)); }
         
         function onMouseDown() { 
             if(!isGameActive) return; 
             if(currentCar) return; 
             if(document.pointerLockElement!==document.body) { document.body.requestPointerLock(); return; } 
-            
-            if (currentWeapon === 'PISTOL') {
-                camera.rotation.x -= 0.05; 
-                setTimeout(() => {
-                    camera.rotation.x = Math.max(-1.5, Math.min(1.5, camera.rotation.x + 0.05));
-                }, 100);
-            }
             
             playSound(currentWeapon==='FIST'?'punch':'shoot'); 
             weaponGroup.position.z = -0.2; setTimeout(()=>weaponGroup.position.z=-0.5, 100); 
@@ -1125,7 +877,7 @@
             
             if(hits.length > 0) { 
                 const d = hits[0].distance; 
-                if(d < (currentWeapon==='FIST'?3:150)) { 
+                if(d < (currentWeapon==='FIST'?3:60)) { 
                     let t = hits[0].object; 
                     while(t.parent && t.parent.type!=='Scene') t=t.parent; 
                     
@@ -1134,25 +886,17 @@
                     if(t.userData.hp<=0) killNPC(t, false); 
                     else { 
                         npcs.forEach(n => { if(!n.userData.isPolice) n.userData.state = 'PANIC'; });
-                        wantedLevel = Math.min(wantedLevel+1, 5); 
-                        wantedDecayTimer = 0; // Сброс таймера розыска при совершении преступления
-                        updateWantedLevelDisplay(); 
+                        // ОБНОВЛЕНИЕ РОЗЫСКА ЧЕРЕЗ НОВУЮ ФУНКЦИЮ С ТАЙМЕРОМ
+                        updateWantedLevel(wantedLevel + 1);
                     } 
                 } 
             } 
         }
 
-        // --- ОБНОВЛЕННЫЙ ENDGAME ---
         function endGame() { 
             isGameActive = false; 
             document.exitPointerLock(); 
-            const bustedScreen = document.getElementById('bustedScreen');
-            
-            bustedScreen.querySelector('h1').innerText = "💀 ТЫ УМЕР 💀"; 
-            bustedScreen.querySelector('h2').innerText = "А Я ГОВОРИЛ ТЕБЕ ЭХ ЛЁХА.";
-            bustedScreen.querySelector('button').innerText = "НАЧАТЬ СНОВА";
-            
-            bustedScreen.style.display = 'flex'; 
+            document.getElementById('bustedScreen').style.display = 'flex'; 
         }
 
         document.getElementById('startBtn').addEventListener('click', () => { 
@@ -1161,12 +905,18 @@
             isGameActive = true; 
             document.body.requestPointerLock(); 
             document.getElementById('hpDisplay').innerText = `❤️ ЗДОРОВЬЕ: ${playerHP}`;
-            updateWantedLevelDisplay();
         });
 
         document.getElementById('help-btn').addEventListener('click', () => {
              document.getElementById('infoBox').style.display = 'block';
         });
+        
+        // --- НОВАЯ КНОПКА TUTORIAL VIDEO (РИКРОЛЛ) ---
+        document.getElementById('tutorial-btn').addEventListener('click', () => {
+             // Ссылка на официальный "Never Gonna Give You Up" (Rickroll)
+             window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+        });
+        // ---------------------------------------------
         
         // --- ЗВУКИ (Заглушки) ---
         function playSound(name) {
